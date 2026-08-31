@@ -5,17 +5,17 @@ import { supabase } from './lib/supabase';
 const giorni = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
 
 const aule = [
-  { id: 1, nome: 'Aula 1', artista: 'P. Daniele', tag: 'bg-amber-500 text-slate-950 ring-amber-300' },
-  { id: 2, nome: 'Aula 2', artista: 'C. Orff', tag: 'bg-sky-500 text-slate-950 ring-sky-300' },
-  { id: 3, nome: 'Aula 3', artista: 'F. Chopin', tag: 'bg-teal-500 text-slate-950 ring-teal-300' },
-  { id: 4, nome: 'Aula 4', artista: 'N. Paganini', tag: 'bg-cyan-500 text-slate-950 ring-cyan-300' },
-  { id: 5, nome: 'Aula 5', artista: 'D. Krall', tag: 'bg-emerald-500 text-slate-950 ring-emerald-300' },
-  { id: 6, nome: 'Aula 6', artista: 'R. Charles', tag: 'bg-green-500 text-slate-950 ring-green-300' },
-  { id: 7, nome: 'Aula 7', artista: 'A. Toscanini', tag: 'bg-fuchsia-500 text-slate-950 ring-fuchsia-300' },
-  { id: 8, nome: 'Aula 8', artista: 'J. Hendrix', tag: 'bg-orange-500 text-slate-950 ring-orange-300' },
-  { id: 9, nome: 'Aula 9', artista: 'M. Davis', tag: 'bg-lime-500 text-slate-950 ring-lime-300' },
-  { id: 10, nome: 'Aula 10', artista: 'J. Bonham', tag: 'bg-yellow-500 text-slate-950 ring-yellow-300' },
-  { id: 11, nome: 'Aula 11', artista: 'Beatles', tag: 'bg-pink-500 text-slate-950 ring-pink-300' },
+  { id: 1, nome: 'Aula 1', artista: 'P. Daniele', tag: 'bg-amber-400 text-amber-950 border-amber-300' },
+  { id: 2, nome: 'Aula 2', artista: 'C. Orff', tag: 'bg-sky-400 text-sky-950 border-sky-300' },
+  { id: 3, nome: 'Aula 3', artista: 'F. Chopin', tag: 'bg-teal-400 text-teal-950 border-teal-300' },
+  { id: 4, nome: 'Aula 4', artista: 'N. Paganini', tag: 'bg-cyan-400 text-cyan-950 border-cyan-300' },
+  { id: 5, nome: 'Aula 5', artista: 'D. Krall', tag: 'bg-emerald-400 text-emerald-950 border-emerald-300' },
+  { id: 6, nome: 'Aula 6', artista: 'R. Charles', tag: 'bg-green-400 text-green-950 border-green-300' },
+  { id: 7, nome: 'Aula 7', artista: 'A. Toscanini', tag: 'bg-fuchsia-400 text-fuchsia-950 border-fuchsia-300' },
+  { id: 8, nome: 'Aula 8', artista: 'J. Hendrix', tag: 'bg-orange-400 text-orange-950 border-orange-300' },
+  { id: 9, nome: 'Aula 9', artista: 'M. Davis', tag: 'bg-lime-400 text-lime-950 border-lime-300' },
+  { id: 10, nome: 'Aula 10', artista: 'J. Bonham', tag: 'bg-yellow-400 text-yellow-950 border-yellow-300' },
+  { id: 11, nome: 'Aula 11', artista: 'Beatles', tag: 'bg-pink-400 text-pink-950 border-pink-300' },
 ];
 
 type ItemData = { 
@@ -65,14 +65,14 @@ export default function TabelloneTV() {
   }, []);
 
   return (
-    // Sfondo Scuro con Safe-Area (Overscan TV 32-42")
-    <main className="h-screen w-screen bg-slate-950 p-2 md:p-4 flex flex-col overflow-hidden font-sans select-none antialiased">
+    // Sfondo esterno neutro brillante per assorbire l'overscan TV
+    <main className="h-screen w-screen bg-slate-200 p-2 md:p-3.5 flex flex-col overflow-hidden font-sans select-none antialiased">
       
-      {/* Contenitore Tabellone TV */}
-      <div className="w-full h-full bg-slate-900 border border-slate-800 rounded-2xl p-1.5 shadow-2xl grid grid-cols-6 grid-rows-12 gap-1 overflow-hidden">
+      {/* Contenitore Tabellone Bianco Luminoso */}
+      <div className="w-full h-full bg-slate-100 border border-slate-300/80 rounded-2xl p-1.5 shadow-xl grid grid-cols-6 grid-rows-12 gap-1 overflow-hidden">
         
         {/* Intestazione Titolo AULE */}
-        <div className="bg-linear-to-br from-slate-800 to-slate-900 border border-slate-700/60 rounded-xl flex items-center justify-center font-black text-lg md:text-xl text-indigo-400 tracking-widest uppercase shadow-md">
+        <div className="bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-lg md:text-xl tracking-widest uppercase shadow-md border border-slate-800">
           AULE
         </div>
 
@@ -80,7 +80,7 @@ export default function TabelloneTV() {
         {giorni.map((giorno) => (
           <div
             key={giorno}
-            className="bg-linear-to-r from-indigo-600 to-indigo-700 text-white rounded-xl flex items-center justify-center font-black text-lg md:text-xl uppercase tracking-wider shadow-lg border border-indigo-500/30"
+            className="bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-lg md:text-xl uppercase tracking-wider shadow-md border border-indigo-500"
           >
             {giorno}
           </div>
@@ -90,20 +90,20 @@ export default function TabelloneTV() {
         {aule.map((aula) => (
           <React.Fragment key={aula.id}>
             
-            {/* Badge Aula Fissa */}
-            <div className="bg-slate-800/90 border border-slate-700/80 rounded-xl flex items-center px-2 py-0.5 space-x-2 shadow-sm overflow-hidden">
-              <div className={`w-2.5 h-8 rounded-lg shrink-0 ${aula.tag.split(' ')[0]} shadow-sm`} />
+            {/* Badge Aula Fissa in tema Chiaro */}
+            <div className="bg-white border-2 border-slate-200 rounded-xl flex items-center px-2 py-0.5 space-x-2 shadow-sm overflow-hidden">
+              <div className={`w-3 h-8 rounded-lg shrink-0 ${aula.tag.split(' ')[0]} shadow-sm border border-black/10`} />
               <div className="flex flex-col min-w-0 justify-center">
-                <span className="font-black text-sm md:text-base text-slate-100 uppercase tracking-tight leading-tight truncate">
+                <span className="font-black text-sm md:text-base text-slate-900 uppercase tracking-tight leading-tight truncate">
                   {aula.nome}
                 </span>
-                <span className="font-bold text-[10px] text-indigo-400 uppercase leading-none truncate mt-0.5">
+                <span className="font-extrabold text-[10px] md:text-xs text-indigo-600 uppercase leading-none truncate mt-0.5">
                   {aula.artista}
                 </span>
               </div>
             </div>
 
-            {/* 5 Celle dei giorni per la TV (Supporto Cella Singola o Doppia) */}
+            {/* 5 Celle dei giorni per la TV */}
             {giorni.map((_, indexGiorno) => {
               const info = assegnazioni[`${aula.id}-${indexGiorno}`];
               const haDoppio = Boolean(info?.docente_2);
@@ -111,43 +111,43 @@ export default function TabelloneTV() {
               return (
                 <div
                   key={`${aula.id}-${indexGiorno}`}
-                  className="bg-slate-800/40 border border-slate-700/50 rounded-xl flex flex-col overflow-hidden p-0.5 justify-center shadow-inner"
+                  className="bg-white border-2 border-slate-200 rounded-xl flex flex-col overflow-hidden p-0.5 justify-center shadow-sm"
                 >
                   {info?.docente || info?.docente_2 ? (
                     haDoppio ? (
-                      /* Layout a 2 Insegnanti nella stessa aula */
+                      /* Layout a 2 Insegnanti (Turno M/P) */
                       <div className="flex flex-col h-full w-full justify-between gap-0.5">
                         {/* Turno 1 */}
-                        <div className="flex-1 bg-white border border-slate-200 rounded-lg flex flex-col items-center justify-center px-1 leading-none overflow-hidden">
-                          <span className="text-slate-950 font-black text-xs md:text-sm uppercase tracking-wide truncate w-full text-center">
+                        <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg flex flex-col items-center justify-center px-1 leading-none overflow-hidden">
+                          <span className="text-slate-900 font-black text-xs md:text-sm uppercase tracking-wide truncate w-full text-center">
                             {info.docente || '—'}
                           </span>
                           {info.nota && (
-                            <span className="text-indigo-600 font-bold text-[9px] truncate w-full text-center leading-none mt-0.5">
+                            <span className="text-indigo-600 font-extrabold text-[9px] truncate w-full text-center leading-none mt-0.5">
                               {info.nota}
                             </span>
                           )}
                         </div>
                         {/* Turno 2 */}
-                        <div className="flex-1 bg-indigo-50 border border-indigo-200 rounded-lg flex flex-col items-center justify-center px-1 leading-none overflow-hidden">
+                        <div className="flex-1 bg-indigo-50/70 border border-indigo-200 rounded-lg flex flex-col items-center justify-center px-1 leading-none overflow-hidden">
                           <span className="text-indigo-950 font-black text-xs md:text-sm uppercase tracking-wide truncate w-full text-center">
                             {info.docente_2}
                           </span>
                           {info.nota_2 && (
-                            <span className="text-indigo-600 font-bold text-[9px] truncate w-full text-center leading-none mt-0.5">
+                            <span className="text-indigo-600 font-extrabold text-[9px] truncate w-full text-center leading-none mt-0.5">
                               {info.nota_2}
                             </span>
                           )}
                         </div>
                       </div>
                     ) : (
-                      /* Layout a Insegnante Singolo (Intera Giornata) */
-                      <div className="h-full w-full bg-white border border-slate-200 rounded-lg flex flex-col items-center justify-center px-1 py-0.5 shadow-sm overflow-hidden">
+                      /* Layout a Insegnante Singolo */
+                      <div className="h-full w-full bg-slate-50/60 rounded-lg flex flex-col items-center justify-center px-1 py-0.5 overflow-hidden">
                         <span className="text-slate-950 font-black text-base md:text-lg uppercase tracking-wide truncate w-full text-center leading-tight">
                           {info.docente}
                         </span>
                         {info.nota && (
-                          <span className="text-indigo-600 font-extrabold text-[10px] md:text-xs truncate w-full text-center leading-none mt-0.5">
+                          <span className="text-indigo-600 font-black text-[10px] md:text-xs truncate w-full text-center leading-none mt-0.5">
                             {info.nota}
                           </span>
                         )}
@@ -156,7 +156,7 @@ export default function TabelloneTV() {
                   ) : (
                     /* Cella Vuota */
                     <div className="h-full w-full flex items-center justify-center">
-                      <span className="text-slate-600 font-normal text-xs">—</span>
+                      <span className="text-slate-300 font-normal text-xs">—</span>
                     </div>
                   )}
                 </div>
