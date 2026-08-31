@@ -13,14 +13,12 @@ const aule = [
 ];
 
 export default function PannelloAdmin() {
-  const [schedaAttiva, setSchedaAttiva] = useState<'orari' | 'media'>('orari');
+  const [schedaAttiva, setSchedaAttiva] = useState<'orari' | 'media' | 'sabato'>('orari');
   const [caricamento, setCaricamento] = useState(false);
   const [messaggio, setMessaggio] = useState<string | null>(null);
 
-  // Dati Globali per Anteprima
   const [assegnazioni, setAssegnazioni] = useState<Record<string, any>>({});
   
-  // Stati Form Calendario
   const [aula, setAula] = useState(1);
   const [giorno, setGiorno] = useState(1);
   const [docente, setDocente] = useState('');
@@ -29,25 +27,51 @@ export default function PannelloAdmin() {
   const [docente2, setDocente2] = useState('');
   const [nota2, setNota2] = useState('');
 
-  // Stati Media
+  // Stati per il Sabato specifico
+  const [dataSabato, setDataSabato] = useState('');
+  const [aulaSabato, setAulaSabato] = useState(1);
+  const [docenteSabato, setDocenteSabato] = useState('');
+  const [notaSabato, setNotaSabato] = useState('');
+
   const [impostazioni, setImpostazioni] = useState({
-    musica_url: '', attiva_musica: false,
-    video_url: '', durata_video: 10, durata_tabellone: 15, attiva_rotazione: false
+    musica_url: '', 
+    attiva_musica: false,
+    video_url: '', 
+    durata_video: 10, 
+    durata_tabellone: 15, 
+    attiva_rotazione: false,
+    stato_riproduzione: 'play'
   });
 
-  // Caricamento Dati e Real-Time
   useEffect(() => {
+    let isMounted = true;
+
     const fetchDati = async () => {
-      const [resOrari, resMedia] = await Promise.all([
-        supabase.from('assegnazioni_aule').select('*'),
-        supabase.from('impostazioni_tv').select('*').eq('id', 1).single()
-      ]);
-      if (resOrari.data) {
-        const mappa: any = {};
-        resOrari.data.forEach((item: any) => { mappa[`${item.aula_id}-${item.giorno_settimana - 1}`] = item; });
-        setAssegnazioni(mappa);
-      }
-      if (resMedia.data) setImpostazioni(resMedia.data);
+      try {
+        const [resOrari, resMedia] = await Promise.all([
+          supabase.from('assegnazioni_aule').select('*'),
+          supabase.from('impostazioni_tv').select('*').eq('id', 1).single()
+        ]);
+        
+        if (!isMounted) return;
+
+        if (resOrari.data) {
+          const mappa: any = {};
+          resOrari.data.forEach((item: any) => { mappa[`${item.aula_id}-${item.giorno_settimana - 1}`] = item; });
+          setAssegnazioni(mappa);
+        }
+        if (resMedia.data) {
+          setImpostazioni({
+            musica_url: resMedia.data.musica_url || '',
+            attiva_musica: Boolean(resMedia.data.attiva_musica),
+            video_url: resMedia.data.video_url || '',
+            durata_video: resMedia.data.durata_video ?? 10,
+            durata_tabellone: resMedia.data.durata_tabellone ?? 15,
+            attiva_rotazione: Boolean(resMedia.data.attiva_rotazione),
+            stato_riproduzione: resMedia.data.stato_riproduzione || 'play'
+          });
+        }
+      } catch (err) {}
     };
 
     fetchDati();
@@ -57,21 +81,32 @@ export default function PannelloAdmin() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'impostazioni_tv' }, fetchDati)
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      isMounted = false;
+      supabase.removeChannel(channel); 
+    };
   }, []);
 
-  // Quando clicchi su una cella o cambi i selettori, auto-compila i campi
   useEffect(() => {
     const info = assegnazioni[`${aula}-${giorno - 1}`];
     if (info) {
-      setDocente(info.docente || ''); setNota(info.nota || '');
+      setDocente(info.docente || ''); 
+      setNota(info.nota || '');
       if (info.docente_2) {
-        setAbilitaDocente2(true); setDocente2(info.docente_2); setNota2(info.nota_2 || '');
+        setAbilitaDocente2(true); 
+        setDocente2(info.docente_2 || ''); 
+        setNota2(info.nota_2 || '');
       } else {
-        setAbilitaDocente2(false); setDocente2(''); setNota2('');
+        setAbilitaDocente2(false); 
+        setDocente2(''); 
+        setNota2('');
       }
     } else {
-      setDocente(''); setNota(''); setAbilitaDocente2(false); setDocente2(''); setNota2('');
+      setDocente(''); 
+      setNota(''); 
+      setAbilitaDocente2(false); 
+      setDocente2(''); 
+      setNota2('');
     }
   }, [aula, giorno, assegnazioni]);
 
@@ -108,17 +143,42 @@ export default function PannelloAdmin() {
     if (!error) setMessaggio('✅ Impostazioni TV salvate!');
   };
 
+  const cambiaStatoAudio = async (nuovoStato: 'play' | 'pause') => {
+    const aggiornato = { ...impostazioni, stato_riproduzione: nuovoStato };
+    setImpostazioni(aggiornato);
+    await supabase.from('impostazioni_tv').update({ stato_riproduzione: nuovoStato }).eq('id', 1);
+    setMessaggio(nuovoStato === 'play' ? '▶️ Audio avviato in TV' : '⏸️ Audio messo in pausa in TV');
+  };
+
+  const handleSalvaSabato = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dataSabato) {
+      setMessaggio('⚠️ Seleziona una data per il Sabato');
+      return;
+    }
+    setCaricamento(true); setMessaggio(null);
+    // Salviamo il sabato usando giorno_settimana = 6 (o salvando la data specifica se preferisci)
+    const { error } = await supabase.from('assegnazioni_aule').upsert({ 
+      aula_id: aulaSabato, 
+      giorno_settimana: 6, // Usiamo 6 per il sabato
+      docente: docenteSabato.trim().toUpperCase(), 
+      nota: `Sabato ${dataSabato} - ${notaSabato.trim()}`,
+    }, { onConflict: 'aula_id,giorno_settimana' });
+    
+    setCaricamento(false);
+    if (!error) setMessaggio(`✅ Sabato (${dataSabato}) aggiunto per Aula ${aulaSabato}!`);
+  };
+
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden">
       
-      {/* PANNELLO SINISTRO: ANTEPRIMA CALENDARIO INTERATTIVA */}
+      {/* ANTEPRIMA A SINISTRA */}
       <div className="hidden lg:flex flex-1 flex-col p-6 bg-slate-100/50 border-r border-slate-200 overflow-auto">
         <div className="mb-4">
           <h2 className="text-2xl font-black text-slate-900">Anteprima TV Interattiva</h2>
           <p className="text-sm text-slate-500 font-medium">Clicca direttamente su una cella del calendario per modificarla.</p>
         </div>
         
-        {/* Griglia Calendario Miniatura */}
         <div className="flex-1 bg-white border border-slate-200 shadow-sm rounded-xl p-2 grid grid-cols-6 grid-rows-12 gap-1 min-h-150">
           <div className="bg-slate-800 text-white rounded-lg flex items-center justify-center font-bold text-xs uppercase">AULE</div>
           {giorni.map((g) => <div key={g.label} className="bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold text-xs uppercase">{g.label}</div>)}
@@ -155,23 +215,25 @@ export default function PannelloAdmin() {
         </div>
       </div>
 
-      {/* PANNELLO DESTRO: CONTROLLI */}
+      {/* PANNELLO DESTRO */}
       <div className="w-full lg:w-112.5 flex flex-col h-full bg-white shadow-2xl z-10">
         
-        {/* Menu Schede */}
-        <div className="flex p-4 border-b border-slate-100 bg-slate-50">
-          <button onClick={() => setSchedaAttiva('orari')} className={`flex-1 py-3 text-sm font-bold rounded-l-xl border border-r-0 transition-colors ${schedaAttiva === 'orari' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}`}>
-            📅 Gestione Orari
+        {/* MENU A SCHEDE */}
+        <div className="flex p-2 border-b border-slate-100 bg-slate-50 gap-1">
+          <button onClick={() => setSchedaAttiva('orari')} className={`flex-1 py-2.5 text-xs font-bold rounded-xl border transition-colors ${schedaAttiva === 'orari' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}`}>
+            📅 Orari
           </button>
-          <button onClick={() => setSchedaAttiva('media')} className={`flex-1 py-3 text-sm font-bold rounded-r-xl border transition-colors ${schedaAttiva === 'media' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}`}>
-            🎬 Media TV
+          <button onClick={() => setSchedaAttiva('sabato')} className={`flex-1 py-2.5 text-xs font-bold rounded-xl border transition-colors ${schedaAttiva === 'sabato' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}`}>
+            🗓️ Aggiungi Sabato
+          </button>
+          <button onClick={() => setSchedaAttiva('media')} className={`flex-1 py-2.5 text-xs font-bold rounded-xl border transition-colors ${schedaAttiva === 'media' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}`}>
+            🎬 Media
           </button>
         </div>
 
         <div className="flex-1 overflow-auto p-6">
           {messaggio && <div className="mb-6 p-4 rounded-xl bg-emerald-100 text-emerald-800 font-bold text-sm text-center border border-emerald-200">{messaggio}</div>}
 
-          {/* SCHEDA 1: ORARI */}
           {schedaAttiva === 'orari' && (
             <form onSubmit={handleSalvaCalendario} className="space-y-6">
               <div>
@@ -224,7 +286,46 @@ export default function PannelloAdmin() {
             </form>
           )}
 
-          {/* SCHEDA 2: MEDIA TV */}
+          {/* SCHEDA AGGIUNGI SABATO SPECIFICO */}
+          {schedaAttiva === 'sabato' && (
+            <form onSubmit={handleSalvaSabato} className="space-y-6">
+              <div>
+                <h2 className="text-xl font-black text-slate-900">Aggiungi Lezione di Sabato</h2>
+                <p className="text-sm text-slate-500 font-medium">Scegli una data specifica per un'apertura straordinaria di sabato.</p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Seleziona Data Sabato</label>
+                  <input 
+                    type="date" 
+                    required 
+                    value={dataSabato} 
+                    onChange={e => setDataSabato(e.target.value)} 
+                    className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-bold outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Aula</label>
+                  <select value={aulaSabato} onChange={e => setAulaSabato(Number(e.target.value))} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-bold outline-none focus:border-indigo-500">
+                    {aule.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
+                  </select>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3">
+                  <label className="block text-xs font-bold text-indigo-600 uppercase tracking-wider">Docente Sabato</label>
+                  <input type="text" required placeholder="Es. ROSSI" value={docenteSabato} onChange={e => setDocenteSabato(e.target.value)} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-black uppercase outline-none focus:border-indigo-500"/>
+                  <input type="text" placeholder="Nota / Materia (Opzionale)" value={notaSabato} onChange={e => setNotaSabato(e.target.value)} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-sm outline-none focus:border-indigo-500"/>
+                </div>
+              </div>
+
+              <button type="submit" disabled={caricamento} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]">
+                AGGIUNGI SABATO STRAORDINARIO 🗓️
+              </button>
+            </form>
+          )}
+
           {schedaAttiva === 'media' && (
             <form onSubmit={handleSalvaMedia} className="space-y-6">
               <div>
@@ -237,8 +338,30 @@ export default function PannelloAdmin() {
                   <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Musica di Sottofondo</h2>
                   <button type="button" onClick={() => setImpostazioni({...impostazioni, attiva_musica: !impostazioni.attiva_musica})} className={`px-4 py-1.5 rounded-lg text-xs font-bold ${impostazioni.attiva_musica ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'}`}>{impostazioni.attiva_musica ? 'ON' : 'OFF'}</button>
                 </div>
-                {/* CAMPO AGGIORNATO PER IL SUPPORTO A YOUTUBE */}
-                <input type="text" placeholder="Link YouTube o file .mp3" value={impostazioni.musica_url} onChange={e => setImpostazioni({...impostazioni, musica_url: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 outline-none focus:border-emerald-500"/>
+                <input 
+                  type="text" 
+                  placeholder="Link YouTube o file .mp3" 
+                  value={impostazioni.musica_url} 
+                  onChange={e => setImpostazioni({...impostazioni, musica_url: e.target.value})} 
+                  className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 outline-none focus:border-emerald-500"
+                />
+
+                <div className="flex gap-2 pt-2">
+                  <button 
+                    type="button" 
+                    onClick={() => cambiaStatoAudio('play')}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                  >
+                    ▶️ PLAY AUDIO
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => cambiaStatoAudio('pause')}
+                    className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                  >
+                    ⏸️ PAUSA AUDIO
+                  </button>
+                </div>
               </div>
 
               <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
@@ -246,8 +369,13 @@ export default function PannelloAdmin() {
                   <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Alternanza Video Promo</h2>
                   <button type="button" onClick={() => setImpostazioni({...impostazioni, attiva_rotazione: !impostazioni.attiva_rotazione})} className={`px-4 py-1.5 rounded-lg text-xs font-bold ${impostazioni.attiva_rotazione ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'bg-slate-100 text-slate-500'}`}>{impostazioni.attiva_rotazione ? 'ON' : 'OFF'}</button>
                 </div>
-                {/* CAMPO AGGIORNATO PER IL SUPPORTO A YOUTUBE */}
-                <input type="text" placeholder="Link YouTube (es. Live) o file .mp4" value={impostazioni.video_url} onChange={e => setImpostazioni({...impostazioni, video_url: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 outline-none focus:border-sky-500"/>
+                <input 
+                  type="text" 
+                  placeholder="Link YouTube (es. Live) o file .mp4" 
+                  value={impostazioni.video_url} 
+                  onChange={e => setImpostazioni({...impostazioni, video_url: e.target.value})} 
+                  className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 outline-none focus:border-sky-500"
+                />
                 
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div>

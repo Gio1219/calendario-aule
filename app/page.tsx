@@ -1,7 +1,6 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from './lib/supabase';
-import ReactPlayer from 'react-player';
 
 const giorni = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
 const aule = [
@@ -18,35 +17,89 @@ const aule = [
   { id: 11, nome: 'Aula 11', artista: 'Beatles', tag: 'bg-pink-400' },
 ];
 
+const getYouTubeId = (url: string) => {
+  if (!url) return '';
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=))([^"&?\/\s]{11})/);
+  return match ? match[1] : '';
+};
+
+const getYouTubeEmbedUrl = (url: string, isLive: boolean = false) => {
+  const videoId = getYouTubeId(url);
+  if (!videoId) return url;
+  if (isLive) {
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
+  }
+  return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}`;
+};
+
 export default function TabelloneTV() {
   const [assegnazioni, setAssegnazioni] = useState<Record<string, any>>({});
   const [impostazioni, setImpostazioni] = useState<any>({});
   const [vistaCorrente, setVistaCorrente] = useState<'tabellone' | 'video'>('tabellone');
-  const [audioIniziato, setAudioIniziato] = useState(false);
+  const [avviato, setAvviato] = useState(false);
+  
+  const playerRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchDati = async () => {
-      const [resOrari, resMedia] = await Promise.all([
-        supabase.from('assegnazioni_aule').select('*'),
-        supabase.from('impostazioni_tv').select('*').eq('id', 1).single()
-      ]);
-      if (resOrari.data) {
-        const mappa: any = {};
-        resOrari.data.forEach((item: any) => { mappa[`${item.aula_id}-${item.giorno_settimana - 1}`] = item; });
-        setAssegnazioni(mappa);
+      try {
+        const [resOrari, resMedia] = await Promise.all([
+          supabase.from('assegnazioni_aule').select('*'),
+          supabase.from('impostazioni_tv').select('*').eq('id', 1).single()
+        ]);
+        
+        if (!isMounted) return;
+        
+        if (resOrari.data) {
+          const mappa: any = {};
+          resOrari.data.forEach((item: any) => { mappa[`${item.aula_id}-${item.giorno_settimana - 1}`] = item; });
+          setAssegnazioni(mappa);
+        }
+        if (resMedia.data) {
+          setImpostazioni(resMedia.data);
+          // Se dal DB lo stato di riproduzione è attivo, avvia in automatico
+          if (resMedia.data.stato_riproduzione === 'play') {
+            setAvviato(true);
+          }
+        }
+      } catch (err: any) {
+        if (err?.name === 'AbortError') return;
       }
-      if (resMedia.data) setImpostazioni(resMedia.data);
     };
 
     fetchDati();
 
     const channel = supabase.channel('tv-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'assegnazioni_aule' }, fetchDati)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'impostazioni_tv' }, fetchDati)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'assegnazioni_aule' }, () => fetchDati())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'impostazioni_tv' }, (payload: any) => {
+        if (payload.new) {
+          setImpostazioni(payload.new);
+          if (payload.new.stato_riproduzione === 'play') {
+            setAvviato(true);
+            comandaPlayer('playVideo');
+          } else if (payload.new.stato_riproduzione === 'pause') {
+            comandaPlayer('pauseVideo');
+          }
+        }
+      })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      isMounted = false; 
+      supabase.removeChannel(channel); 
+    };
   }, []);
+
+  const comandaPlayer = (comando: 'playVideo' | 'pauseVideo') => {
+    if (playerRef.current && playerRef.current.contentWindow) {
+      playerRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: comando, args: [] }),
+        '*'
+      );
+    }
+  };
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -62,46 +115,51 @@ export default function TabelloneTV() {
     return () => clearTimeout(timer);
   }, [vistaCorrente, impostazioni]);
 
+  const avviaAudioInBackground = () => {
+    setAvviato(true);
+    comandaPlayer('playVideo');
+  };
+
+  const videoIdMusica = getYouTubeId(impostazioni.musica_url);
+
   return (
-    <main 
-      onClick={() => setAudioIniziato(true)} 
-      className="h-screen w-screen bg-slate-900 overflow-hidden font-sans select-none relative cursor-default"
-    >
-      {/* PLAYER AUDIO INVISIBILE */}
-      <div className="absolute top-[-9999px] left-[-9999px] opacity-0 pointer-events-none">
-        {impostazioni.attiva_musica && impostazioni.musica_url && (
-          <ReactPlayer 
-            url={impostazioni.musica_url}
-            playing={audioIniziato}
-            loop={true}
-            volume={1}
-            width="10px"
-            height="10px"
-            // @ts-ignore
-            config={{ youtube: { playerVars: { playsinline: 1 } } }}
-          />
-        )}
-      </div>
+    <main className="h-screen w-screen bg-slate-900 overflow-hidden font-sans select-none relative">
       
-      {!audioIniziato && impostazioni.attiva_musica && (
-        <div className="absolute z-50 bottom-4 right-4 bg-black/80 text-white px-4 py-2 rounded-xl text-xs font-bold animate-pulse cursor-pointer shadow-xl border border-white/20">
-          👆 Tocca un punto qualsiasi dello schermo per avviare la TV e l'audio
+     {/* 🎵 LETTORE AUDIO INVISIBILE IN BACKGROUND (Sincronizzato in tempo reale) */}
+      {impostazioni.attiva_musica && videoIdMusica && avviato && impostazioni.stato_riproduzione === 'play' && (
+        <div className="absolute top-[-9999px] left-[-9999px] w-px h-px opacity-0 pointer-events-none overflow-hidden">
+          <iframe 
+            ref={playerRef}
+            src={`https://www.youtube.com/embed/${videoIdMusica}?autoplay=1&enablejsapi=1&controls=0`}
+            className="w-full h-full border-0"
+            allow="autoplay; encrypted-media"
+          />
+        </div>
+      )}
+
+      {/* TASTO DI EMERGENZA PER IL PRIMO ACCESSO (Se il browser blocca l'autoplay nativo) */}
+      {!avviato && impostazioni.attiva_musica && (
+        <div onClick={avviaAudioInBackground} className="absolute inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-6 text-center cursor-pointer">
+          <div className="bg-indigo-600 border border-indigo-400 p-8 rounded-3xl shadow-2xl max-w-md flex flex-col items-center space-y-4">
+            <span className="text-4xl">🎵</span>
+            <h2 className="text-2xl font-black text-white">Avvia il Display TV</h2>
+            <p className="text-sm text-indigo-100 font-medium">
+              Ticca lo schermo per avviare la live e il tabellone a schermo intero.
+            </p>
+            <button className="w-full bg-white text-indigo-950 font-black py-4 px-6 rounded-2xl shadow-lg text-lg">
+              AVVIA TV 🚀
+            </button>
+          </div>
         </div>
       )}
 
       {/* VISTA 1: VIDEO PROMOZIONALE */}
       <div className={`absolute inset-0 transition-opacity duration-1000 z-10 ${vistaCorrente === 'video' ? 'opacity-100' : 'opacity-0 pointer-events-none bg-black'}`}>
         {impostazioni.video_url && (
-          <ReactPlayer 
-            url={impostazioni.video_url}
-            playing={vistaCorrente === 'video'}
-            muted={true}
-            loop={true}
-            width="100%"
-            height="100%"
-            style={{ pointerEvents: 'none' }}
-            // @ts-ignore
-            config={{ youtube: { playerVars: { controls: 0, showinfo: 0, rel: 0, playsinline: 1 } } }}
+          <iframe 
+            src={getYouTubeEmbedUrl(impostazioni.video_url, false)}
+            className="w-full h-full border-0 pointer-events-none"
+            allow="autoplay; encrypted-media"
           />
         )}
       </div>
@@ -148,7 +206,7 @@ export default function TabelloneTV() {
                           </div>
                           <div className="flex-1 bg-indigo-50/70 border border-indigo-200 rounded-lg flex flex-col items-center justify-center px-1 overflow-hidden">
                             <span className="text-indigo-950 font-black text-base md:text-lg lg:text-xl uppercase tracking-tight truncate w-full text-center leading-none mt-0.5">{info.docente_2}</span>
-                            {info.nota_2 && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5">{info.nota_2}</span>}
+                            {info.nota_2 && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5 leading-none">{info.nota_2}</span>}
                           </div>
                         </div>
                       ) : (
