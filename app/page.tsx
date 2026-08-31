@@ -1,6 +1,7 @@
 "use client";
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
+import ReactPlayer from 'react-player';
 
 const giorni = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
 const aule = [
@@ -17,20 +18,11 @@ const aule = [
   { id: 11, nome: 'Aula 11', artista: 'Beatles', tag: 'bg-pink-400' },
 ];
 
-const isYouTube = (url: string) => url?.includes('youtube.com') || url?.includes('youtu.be');
-const getYouTubeId = (url: string) => {
-  if (!url) return null;
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=))([^"&?\/\s]{11})/);
-  return match ? match[1] : null;
-};
-
 export default function TabelloneTV() {
   const [assegnazioni, setAssegnazioni] = useState<Record<string, any>>({});
   const [impostazioni, setImpostazioni] = useState<any>({});
   const [vistaCorrente, setVistaCorrente] = useState<'tabellone' | 'video'>('tabellone');
-  
   const [audioIniziato, setAudioIniziato] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     const fetchDati = async () => {
@@ -70,52 +62,47 @@ export default function TabelloneTV() {
     return () => clearTimeout(timer);
   }, [vistaCorrente, impostazioni]);
 
-  const avviaAudio = () => {
-    if (!audioIniziato) {
-      setAudioIniziato(true);
-      if (audioRef.current && impostazioni.attiva_musica && !isYouTube(impostazioni.musica_url)) {
-        audioRef.current.play().catch(e => console.log("Autoplay bloccato", e));
-      }
-    }
-  };
-
   return (
-    <main onClick={avviaAudio} className="h-screen w-screen bg-slate-900 overflow-hidden font-sans select-none relative cursor-default">
+    <main 
+      onClick={() => setAudioIniziato(true)} 
+      className="h-screen w-screen bg-slate-900 overflow-hidden font-sans select-none relative cursor-default"
+    >
+      {/* PLAYER AUDIO INVISIBILE */}
+      <div className="absolute top-[-9999px] left-[-9999px] opacity-0 pointer-events-none">
+        {impostazioni.attiva_musica && impostazioni.musica_url && (
+          <ReactPlayer 
+            url={impostazioni.musica_url}
+            playing={audioIniziato}
+            loop={true}
+            volume={1}
+            width="10px"
+            height="10px"
+            // @ts-ignore
+            config={{ youtube: { playerVars: { playsinline: 1 } } }}
+          />
+        )}
+      </div>
       
-      {/* 1. PLAYER AUDIO NATIVO */}
-      {impostazioni.attiva_musica && impostazioni.musica_url && !isYouTube(impostazioni.musica_url) && (
-        <audio ref={audioRef} src={impostazioni.musica_url} loop autoPlay hidden />
-      )}
-
-      {/* 2. PLAYER YOUTUBE INVISIBILE (1x1 pixel) PER LIVE AUDIO */}
-      {audioIniziato && impostazioni.attiva_musica && impostazioni.musica_url && isYouTube(impostazioni.musica_url) && (
-        <iframe 
-          className="absolute w-px h-px opacity-0 pointer-events-none -z-10"
-          src={`https://www.youtube.com/embed/${getYouTubeId(impostazioni.musica_url)}?autoplay=1&controls=0&playsinline=1`} 
-          allow="autoplay; encrypted-media" 
-        />
-      )}
-      
-      {/* Overlay Tocca Schermo */}
       {!audioIniziato && impostazioni.attiva_musica && (
-        <div className="absolute z-50 bottom-4 right-4 bg-black/80 text-white px-4 py-2 rounded-xl text-xs font-bold animate-bounce cursor-pointer shadow-xl">
-          👆 Tocca lo schermo per attivare la musica
+        <div className="absolute z-50 bottom-4 right-4 bg-black/80 text-white px-4 py-2 rounded-xl text-xs font-bold animate-pulse cursor-pointer shadow-xl border border-white/20">
+          👆 Tocca un punto qualsiasi dello schermo per avviare la TV e l'audio
         </div>
       )}
 
-      {/* VISTA 1: VIDEO YOUTUBE O NATIVO */}
+      {/* VISTA 1: VIDEO PROMOZIONALE */}
       <div className={`absolute inset-0 transition-opacity duration-1000 z-10 ${vistaCorrente === 'video' ? 'opacity-100' : 'opacity-0 pointer-events-none bg-black'}`}>
         {impostazioni.video_url && (
-          isYouTube(impostazioni.video_url) ? (
-            <iframe 
-              className="w-full h-full object-cover pointer-events-none"
-              src={`https://www.youtube.com/embed/${getYouTubeId(impostazioni.video_url)}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&playsinline=1`}
-              allow="autoplay; encrypted-media"
-              frameBorder="0"
-            />
-          ) : (
-            <video src={impostazioni.video_url} autoPlay loop muted className="w-full h-full object-cover" />
-          )
+          <ReactPlayer 
+            url={impostazioni.video_url}
+            playing={vistaCorrente === 'video'}
+            muted={true}
+            loop={true}
+            width="100%"
+            height="100%"
+            style={{ pointerEvents: 'none' }}
+            // @ts-ignore
+            config={{ youtube: { playerVars: { controls: 0, showinfo: 0, rel: 0, playsinline: 1 } } }}
+          />
         )}
       </div>
 
@@ -161,7 +148,7 @@ export default function TabelloneTV() {
                           </div>
                           <div className="flex-1 bg-indigo-50/70 border border-indigo-200 rounded-lg flex flex-col items-center justify-center px-1 overflow-hidden">
                             <span className="text-indigo-950 font-black text-base md:text-lg lg:text-xl uppercase tracking-tight truncate w-full text-center leading-none mt-0.5">{info.docente_2}</span>
-                            {info.nota_2 && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5 leading-none">{info.nota_2}</span>}
+                            {info.nota_2 && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5">{info.nota_2}</span>}
                           </div>
                         </div>
                       ) : (
