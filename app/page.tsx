@@ -123,11 +123,9 @@ export default function TabelloneTV() {
               <div className="bg-white border-2 border-slate-200 rounded-xl flex items-center px-2 py-0.5 space-x-3 shadow-sm overflow-hidden">
                 <div className={`w-3.5 h-12 rounded-lg shrink-0 ${aula.tag} shadow-sm`} />
                 <div className="flex flex-col min-w-0 justify-center">
-                  {/* ECCO LA MODIFICA: Nome dell'aula molto più grande (text-2xl md:text-3xl) */}
                   <span className="font-black text-2xl md:text-3xl text-slate-900 uppercase tracking-tight leading-none truncate mt-1">
                     {aula.nome}
                   </span>
-                  {/* Artista mantenuto in piccolo come richiesto */}
                   <span className="font-extrabold text-[10px] md:text-xs text-indigo-600 uppercase leading-none truncate mt-0.5 mb-1">
                     {aula.artista}
                   </span>
@@ -144,23 +142,26 @@ export default function TabelloneTV() {
                       haDoppio ? (
                         <div className="flex flex-col h-full w-full justify-between gap-0.5">
                           <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg flex flex-col items-center justify-center px-1 overflow-hidden">
-                            <span className="text-slate-900 font-black text-xs md:text-sm uppercase tracking-wide truncate w-full text-center">{info.docente || '—'}</span>
-                            {info.nota && <span className="text-indigo-600 font-extrabold text-[9px] truncate w-full text-center mt-0.5">{info.nota}</span>}
+                            {/* DOCENTE 1 IN DOPPIO TURNO INGRANDITO */}
+                            <span className="text-slate-900 font-black text-sm md:text-base lg:text-lg uppercase tracking-wide truncate w-full text-center">{info.docente || '—'}</span>
+                            {info.nota && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5">{info.nota}</span>}
                           </div>
                           <div className="flex-1 bg-indigo-50/70 border border-indigo-200 rounded-lg flex flex-col items-center justify-center px-1 overflow-hidden">
-                            <span className="text-indigo-950 font-black text-xs md:text-sm uppercase tracking-wide truncate w-full text-center">{info.docente_2}</span>
-                            {info.nota_2 && <span className="text-indigo-600 font-extrabold text-[9px] truncate w-full text-center mt-0.5">{info.nota_2}</span>}
+                            {/* DOCENTE 2 IN DOPPIO TURNO INGRANDITO */}
+                            <span className="text-indigo-950 font-black text-sm md:text-base lg:text-lg uppercase tracking-wide truncate w-full text-center">{info.docente_2}</span>
+                            {info.nota_2 && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5">{info.nota_2}</span>}
                           </div>
                         </div>
                       ) : (
                         <div className="h-full w-full bg-slate-50/60 rounded-lg flex flex-col items-center justify-center px-1 py-0.5 overflow-hidden">
-                          <span className="text-slate-950 font-black text-base md:text-lg uppercase tracking-wide truncate w-full text-center">{info.docente}</span>
+                          {/* DOCENTE SINGOLO INGRANDITO AL MASSIMO */}
+                          <span className="text-slate-950 font-black text-xl md:text-2xl lg:text-3xl uppercase tracking-wide truncate w-full text-center">{info.docente}</span>
                           {info.nota && <span className="text-indigo-600 font-black text-[10px] md:text-xs truncate w-full text-center mt-0.5">{info.nota}</span>}
                         </div>
                       )
                     ) : (
                       <div className="h-full w-full flex items-center justify-center">
-                        <span className="text-slate-300 font-normal text-xs">—</span>
+                        <span className="text-slate-300 font-normal text-xs md:text-sm">—</span>
                       </div>
                     )}
                   </div>
