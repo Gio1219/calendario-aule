@@ -58,34 +58,21 @@ export default function TabelloneTV() {
   }, []);
 
   return (
-    <main className="h-screen w-screen bg-slate-100 text-slate-800 p-1.5 flex flex-col overflow-hidden font-sans select-none">
+    <main className="h-screen w-screen bg-slate-100 text-slate-800 p-2 flex flex-col overflow-hidden font-sans select-none">
       
-      {/* Header compatto ad alto impatto */}
-      <header className="flex justify-between items-center bg-white border border-slate-200 rounded-lg px-6 py-1 mb-1 shadow-sm h-10.5 shrink-0">
-        <div className="flex items-center space-x-3">
-          <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-          <h1 className="text-xl font-black tracking-wide text-slate-900 uppercase">
-            Nuova Accademia Toscanini
-          </h1>
-        </div>
-        <div className="text-base font-black text-indigo-600 tracking-wider uppercase bg-indigo-50 px-3 py-0.5 rounded-md border border-indigo-100">
-          Calendario Aule
-        </div>
-      </header>
-
-      {/* Griglia a schermo intero bilanciata (12 righe proporzionali) */}
-      <div className="flex-1 grid grid-cols-6 grid-rows-12 gap-1 h-[calc(100vh-52px)]">
+      {/* Griglia interamente dedicata al tabellone senza la barra superiore */}
+      <div className="flex-1 grid grid-cols-6 grid-rows-12 gap-1.5 h-full">
         
         {/* Intestazione Titolo AULE */}
-        <div className="bg-slate-900 text-white rounded-md flex items-center justify-center font-black text-xl tracking-widest uppercase shadow-sm border border-slate-800">
+        <div className="bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-2xl tracking-widest uppercase shadow-sm border border-slate-800">
           AULE
         </div>
 
-        {/* Intestazione Giorni (Testo Ingrandito) */}
+        {/* Intestazione Giorni */}
         {giorni.map((giorno) => (
           <div
             key={giorno}
-            className="bg-indigo-600 text-white rounded-md flex items-center justify-center font-black text-xl uppercase tracking-wider shadow-sm"
+            className="bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-2xl uppercase tracking-wider shadow-sm"
           >
             {giorno}
           </div>
@@ -94,35 +81,35 @@ export default function TabelloneTV() {
         {/* Righe Aule e Celle */}
         {aule.map((aula) => (
           <React.Fragment key={aula.id}>
-            {/* Colonna Aula Fissa con Testo Più Grande */}
+            {/* Colonna Aula Fissa */}
             <div
-              className={`${aula.color} rounded-md flex flex-col items-center justify-center p-0.5 border-2 shadow-sm text-center leading-none overflow-hidden`}
+              className={`${aula.color} rounded-xl flex flex-col items-center justify-center p-1 border-2 shadow-sm text-center leading-none overflow-hidden`}
             >
-              <span className="font-black text-lg md:text-xl tracking-tight uppercase leading-none">{aula.nome}</span>
-              <span className="font-extrabold text-xs opacity-85 uppercase mt-0.5 leading-none">{aula.artista}</span>
+              <span className="font-black text-xl md:text-2xl tracking-tight uppercase leading-none">{aula.nome}</span>
+              <span className="font-extrabold text-xs md:text-sm opacity-85 uppercase mt-1 leading-none">{aula.artista}</span>
             </div>
 
-            {/* 5 Celle dei giorni per la TV (Docente Ingrandito) */}
+            {/* 5 Celle dei giorni per la TV */}
             {giorni.map((_, indexGiorno) => {
               const info = assegnazioni[`${aula.id}-${indexGiorno}`];
               return (
                 <div
                   key={`${aula.id}-${indexGiorno}`}
-                  className="bg-white border-2 border-slate-200 rounded-md flex flex-col items-center justify-center p-0.5 text-center shadow-sm overflow-hidden"
+                  className="bg-white border-2 border-slate-200 rounded-xl flex flex-col items-center justify-center p-1 text-center shadow-sm overflow-hidden"
                 >
                   {info?.docente ? (
                     <>
-                      <span className="text-indigo-950 font-black tracking-wide text-lg md:text-xl uppercase leading-none truncate w-full">
+                      <span className="text-indigo-950 font-black tracking-wide text-xl md:text-2xl uppercase leading-none truncate w-full">
                         {info.docente}
                       </span>
                       {info.nota && (
-                        <span className="text-indigo-600 font-bold text-xs tracking-normal leading-none truncate w-full mt-0.5">
+                        <span className="text-indigo-600 font-bold text-xs md:text-sm tracking-normal leading-none truncate w-full mt-1">
                           {info.nota}
                         </span>
                       )}
                     </>
                   ) : (
-                    <span className="text-slate-300 text-sm font-normal">—</span>
+                    <span className="text-slate-300 text-base font-normal">—</span>
                   )}
                 </div>
               );
