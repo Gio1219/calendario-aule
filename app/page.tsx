@@ -2,7 +2,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from './lib/supabase';
 
-// Dati statici delle aule e degli artisti
 const giorni = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
 const aule = [
   { id: 1, nome: 'Aula 1', artista: 'P. Daniele', tag: 'bg-amber-400' },
@@ -23,7 +22,6 @@ export default function TabelloneTV() {
   const [impostazioni, setImpostazioni] = useState<any>({});
   const [vistaCorrente, setVistaCorrente] = useState<'tabellone' | 'video'>('tabellone');
   
-  // Audio e Autoplay
   const [audioIniziato, setAudioIniziato] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -33,12 +31,9 @@ export default function TabelloneTV() {
         supabase.from('assegnazioni_aule').select('*'),
         supabase.from('impostazioni_tv').select('*').eq('id', 1).single()
       ]);
-      
       if (resOrari.data) {
         const mappa: any = {};
-        resOrari.data.forEach((item: any) => {
-          mappa[`${item.aula_id}-${item.giorno_settimana - 1}`] = item;
-        });
+        resOrari.data.forEach((item: any) => { mappa[`${item.aula_id}-${item.giorno_settimana - 1}`] = item; });
         setAssegnazioni(mappa);
       }
       if (resMedia.data) setImpostazioni(resMedia.data);
@@ -54,7 +49,6 @@ export default function TabelloneTV() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  // Gestione rotazione Tabellone/Video
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (impostazioni.attiva_rotazione && impostazioni.video_url) {
@@ -69,7 +63,6 @@ export default function TabelloneTV() {
     return () => clearTimeout(timer);
   }, [vistaCorrente, impostazioni]);
 
-  // Avvio manuale audio per la TV
   const avviaAudio = () => {
     if (audioRef.current && impostazioni.attiva_musica) {
       audioRef.current.play().catch(e => console.log("Autoplay bloccato", e));
@@ -78,14 +71,8 @@ export default function TabelloneTV() {
   };
 
   return (
-    <main 
-      onClick={avviaAudio}
-      className="h-screen w-screen bg-slate-900 overflow-hidden font-sans select-none relative"
-    >
-      {/* Player Audio */}
-      {impostazioni.attiva_musica && impostazioni.musica_url && (
-        <audio ref={audioRef} src={impostazioni.musica_url} loop autoPlay hidden />
-      )}
+    <main onClick={avviaAudio} className="h-screen w-screen bg-slate-900 overflow-hidden font-sans select-none relative">
+      {impostazioni.attiva_musica && impostazioni.musica_url && <audio ref={audioRef} src={impostazioni.musica_url} loop autoPlay hidden />}
       
       {!audioIniziato && impostazioni.attiva_musica && (
         <div className="absolute z-50 bottom-4 right-4 bg-black/80 text-white px-4 py-2 rounded-xl text-xs font-bold animate-bounce cursor-pointer shadow-xl">
@@ -93,18 +80,12 @@ export default function TabelloneTV() {
         </div>
       )}
 
-      {/* VISTA 1: VIDEO */}
+      {/* VIDEO */}
       <div className={`absolute inset-0 transition-opacity duration-1000 z-10 ${vistaCorrente === 'video' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-         {impostazioni.video_url && (
-           <video 
-             src={impostazioni.video_url} 
-             autoPlay loop muted 
-             className="w-full h-full object-cover"
-           />
-         )}
+         {impostazioni.video_url && <video src={impostazioni.video_url} autoPlay loop muted className="w-full h-full object-cover" />}
       </div>
 
-      {/* VISTA 2: TABELLONE ORARI */}
+      {/* TABELLONE */}
       <div className={`absolute inset-0 bg-slate-200 p-2 md:p-3.5 flex flex-col transition-opacity duration-1000 z-20 ${vistaCorrente === 'tabellone' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="w-full h-full bg-slate-100 border border-slate-300/80 rounded-2xl p-1.5 shadow-xl grid grid-cols-6 grid-rows-12 gap-1 overflow-hidden">
           
@@ -119,7 +100,6 @@ export default function TabelloneTV() {
 
           {aule.map((aula) => (
             <React.Fragment key={aula.id}>
-              
               <div className="bg-white border-2 border-slate-200 rounded-xl flex items-center px-2 py-0.5 space-x-3 shadow-sm overflow-hidden">
                 <div className={`w-3.5 h-12 rounded-lg shrink-0 ${aula.tag} shadow-sm`} />
                 <div className="flex flex-col min-w-0 justify-center">
@@ -142,19 +122,18 @@ export default function TabelloneTV() {
                       haDoppio ? (
                         <div className="flex flex-col h-full w-full justify-between gap-0.5">
                           <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg flex flex-col items-center justify-center px-1 overflow-hidden">
-                            {/* DOCENTE 1 IN DOPPIO TURNO INGRANDITO */}
-                            <span className="text-slate-900 font-black text-sm md:text-base lg:text-lg uppercase tracking-wide truncate w-full text-center">{info.docente || '—'}</span>
-                            {info.nota && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5">{info.nota}</span>}
+                            {/* DOPPIO INSEGNANTE 1 PIU' GRANDE */}
+                            <span className="text-slate-900 font-black text-base md:text-lg lg:text-xl uppercase tracking-tight truncate w-full text-center leading-none mt-0.5">{info.docente || '—'}</span>
+                            {info.nota && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5 leading-none">{info.nota}</span>}
                           </div>
                           <div className="flex-1 bg-indigo-50/70 border border-indigo-200 rounded-lg flex flex-col items-center justify-center px-1 overflow-hidden">
-                            {/* DOCENTE 2 IN DOPPIO TURNO INGRANDITO */}
-                            <span className="text-indigo-950 font-black text-sm md:text-base lg:text-lg uppercase tracking-wide truncate w-full text-center">{info.docente_2}</span>
-                            {info.nota_2 && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5">{info.nota_2}</span>}
+                            {/* DOPPIO INSEGNANTE 2 PIU' GRANDE */}
+                            <span className="text-indigo-950 font-black text-base md:text-lg lg:text-xl uppercase tracking-tight truncate w-full text-center leading-none mt-0.5">{info.docente_2}</span>
+                            {info.nota_2 && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5 leading-none">{info.nota_2}</span>}
                           </div>
                         </div>
                       ) : (
                         <div className="h-full w-full bg-slate-50/60 rounded-lg flex flex-col items-center justify-center px-1 py-0.5 overflow-hidden">
-                          {/* DOCENTE SINGOLO INGRANDITO AL MASSIMO */}
                           <span className="text-slate-950 font-black text-xl md:text-2xl lg:text-3xl uppercase tracking-wide truncate w-full text-center">{info.docente}</span>
                           {info.nota && <span className="text-indigo-600 font-black text-[10px] md:text-xs truncate w-full text-center mt-0.5">{info.nota}</span>}
                         </div>
