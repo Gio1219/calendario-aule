@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from './lib/supabase';
 
-// (Manteniamo i dati statici delle aule puliti)
+// Dati statici delle aule e degli artisti
 const giorni = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
 const aule = [
   { id: 1, nome: 'Aula 1', artista: 'P. Daniele', tag: 'bg-amber-400' },
@@ -23,12 +23,11 @@ export default function TabelloneTV() {
   const [impostazioni, setImpostazioni] = useState<any>({});
   const [vistaCorrente, setVistaCorrente] = useState<'tabellone' | 'video'>('tabellone');
   
-  // Per i browser che bloccano l'audio in automatico, servirà un primo click (invisibile) sulla TV
+  // Audio e Autoplay
   const [audioIniziato, setAudioIniziato] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    // 1. Carica Calendario e Impostazioni
     const fetchDati = async () => {
       const [resOrari, resMedia] = await Promise.all([
         supabase.from('assegnazioni_aule').select('*'),
@@ -47,7 +46,6 @@ export default function TabelloneTV() {
 
     fetchDati();
 
-    // 2. Iscrizione RealTime a ENTRAMBE le tabelle
     const channel = supabase.channel('tv-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'assegnazioni_aule' }, fetchDati)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'impostazioni_tv' }, fetchDati)
@@ -56,26 +54,22 @@ export default function TabelloneTV() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  // 3. Gestione del Timer (Rotazione Tabellone <-> Video)
+  // Gestione rotazione Tabellone/Video
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    
     if (impostazioni.attiva_rotazione && impostazioni.video_url) {
       if (vistaCorrente === 'tabellone') {
-        // Mostra Tabellone, poi passa a Video
         timer = setTimeout(() => setVistaCorrente('video'), (impostazioni.durata_tabellone || 15) * 1000);
       } else {
-        // Mostra Video, poi passa a Tabellone
         timer = setTimeout(() => setVistaCorrente('tabellone'), (impostazioni.durata_video || 10) * 1000);
       }
     } else {
       setVistaCorrente('tabellone');
     }
-
     return () => clearTimeout(timer);
   }, [vistaCorrente, impostazioni]);
 
-  // Gestione Audio Policy del Browser (Necessita di interazione)
+  // Avvio manuale audio per la TV
   const avviaAudio = () => {
     if (audioRef.current && impostazioni.attiva_musica) {
       audioRef.current.play().catch(e => console.log("Autoplay bloccato", e));
@@ -85,33 +79,32 @@ export default function TabelloneTV() {
 
   return (
     <main 
-      onClick={avviaAudio} // Clicca ovunque sulla TV per sbloccare l'audio la prima volta
+      onClick={avviaAudio}
       className="h-screen w-screen bg-slate-900 overflow-hidden font-sans select-none relative"
     >
-      {/* PLAYER AUDIO INVISIBILE */}
+      {/* Player Audio */}
       {impostazioni.attiva_musica && impostazioni.musica_url && (
         <audio ref={audioRef} src={impostazioni.musica_url} loop autoPlay hidden />
       )}
       
-      {/* Bottone sblocco audio per TV */}
       {!audioIniziato && impostazioni.attiva_musica && (
-        <div className="absolute z-50 bottom-4 right-4 bg-black/80 text-white px-4 py-2 rounded-xl text-xs font-bold animate-bounce cursor-pointer">
+        <div className="absolute z-50 bottom-4 right-4 bg-black/80 text-white px-4 py-2 rounded-xl text-xs font-bold animate-bounce cursor-pointer shadow-xl">
           👆 Tocca lo schermo per attivare la musica
         </div>
       )}
 
-      {/* VISTA 1: IL VIDEO PROMOZIONALE */}
+      {/* VISTA 1: VIDEO */}
       <div className={`absolute inset-0 transition-opacity duration-1000 z-10 ${vistaCorrente === 'video' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
          {impostazioni.video_url && (
            <video 
              src={impostazioni.video_url} 
-             autoPlay loop muted // Silenzioso perché abbiamo già la musica di sottofondo
+             autoPlay loop muted 
              className="w-full h-full object-cover"
            />
          )}
       </div>
 
-      {/* VISTA 2: IL TABELLONE ORARI */}
+      {/* VISTA 2: TABELLONE ORARI */}
       <div className={`absolute inset-0 bg-slate-200 p-2 md:p-3.5 flex flex-col transition-opacity duration-1000 z-20 ${vistaCorrente === 'tabellone' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="w-full h-full bg-slate-100 border border-slate-300/80 rounded-2xl p-1.5 shadow-xl grid grid-cols-6 grid-rows-12 gap-1 overflow-hidden">
           
@@ -128,10 +121,16 @@ export default function TabelloneTV() {
             <React.Fragment key={aula.id}>
               
               <div className="bg-white border-2 border-slate-200 rounded-xl flex items-center px-2 py-0.5 space-x-3 shadow-sm overflow-hidden">
-                <div className={`w-3.5 h-10 rounded-lg shrink-0 ${aula.tag} shadow-sm`} />
+                <div className={`w-3.5 h-12 rounded-lg shrink-0 ${aula.tag} shadow-sm`} />
                 <div className="flex flex-col min-w-0 justify-center">
-                  <span className="font-black text-lg md:text-xl text-slate-900 uppercase tracking-tight leading-none truncate">{aula.nome}</span>
-                  <span className="font-extrabold text-[10px] md:text-xs text-indigo-600 uppercase leading-none truncate mt-1">{aula.artista}</span>
+                  {/* ECCO LA MODIFICA: Nome dell'aula molto più grande (text-2xl md:text-3xl) */}
+                  <span className="font-black text-2xl md:text-3xl text-slate-900 uppercase tracking-tight leading-none truncate mt-1">
+                    {aula.nome}
+                  </span>
+                  {/* Artista mantenuto in piccolo come richiesto */}
+                  <span className="font-extrabold text-[10px] md:text-xs text-indigo-600 uppercase leading-none truncate mt-0.5 mb-1">
+                    {aula.artista}
+                  </span>
                 </div>
               </div>
 
