@@ -58,13 +58,14 @@ export default function TabelloneTV() {
   }, []);
 
   return (
-    <main className="h-screen w-screen bg-slate-100 text-slate-800 p-2 flex flex-col overflow-hidden font-sans select-none">
+    // Sfondo esterno scuro per la safe area anti-overscan
+    <main className="h-screen w-screen bg-slate-900 p-3 md:p-5 flex flex-col justify-center items-center overflow-hidden font-sans select-none">
       
-      {/* Griglia interamente dedicata al tabellone senza la barra superiore */}
-      <div className="flex-1 grid grid-cols-6 grid-rows-12 gap-1.5 h-full">
+      {/* Contenitore interno griglia con bordi arrotondati e ombra */}
+      <div className="w-full h-full bg-slate-100 p-2 rounded-2xl shadow-2xl grid grid-cols-6 grid-rows-12 gap-1.5 overflow-hidden">
         
-        {/* Intestazione Titolo AULE */}
-        <div className="bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-2xl tracking-widest uppercase shadow-sm border border-slate-800">
+        {/* Intestazione AULE */}
+        <div className="bg-slate-900 text-white rounded-lg flex items-center justify-center font-black text-lg tracking-wider uppercase border border-slate-800">
           AULE
         </div>
 
@@ -72,7 +73,7 @@ export default function TabelloneTV() {
         {giorni.map((giorno) => (
           <div
             key={giorno}
-            className="bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-2xl uppercase tracking-wider shadow-sm"
+            className="bg-indigo-600 text-white rounded-lg flex items-center justify-center font-black text-lg uppercase tracking-wider shadow-sm"
           >
             {giorno}
           </div>
@@ -83,33 +84,33 @@ export default function TabelloneTV() {
           <React.Fragment key={aula.id}>
             {/* Colonna Aula Fissa */}
             <div
-              className={`${aula.color} rounded-xl flex flex-col items-center justify-center p-1 border-2 shadow-sm text-center leading-none overflow-hidden`}
+              className={`${aula.color} rounded-lg flex flex-col items-center justify-center px-1 border-2 shadow-sm text-center leading-none overflow-hidden`}
             >
-              <span className="font-black text-xl md:text-2xl tracking-tight uppercase leading-none">{aula.nome}</span>
-              <span className="font-extrabold text-xs md:text-sm opacity-85 uppercase mt-1 leading-none">{aula.artista}</span>
+              <span className="font-black text-base tracking-tight uppercase leading-none">{aula.nome}</span>
+              <span className="font-bold text-[11px] opacity-80 uppercase mt-0.5 leading-none">{aula.artista}</span>
             </div>
 
-            {/* 5 Celle dei giorni per la TV */}
+            {/* 5 Celle dei giorni */}
             {giorni.map((_, indexGiorno) => {
               const info = assegnazioni[`${aula.id}-${indexGiorno}`];
               return (
                 <div
                   key={`${aula.id}-${indexGiorno}`}
-                  className="bg-white border-2 border-slate-200 rounded-xl flex flex-col items-center justify-center p-1 text-center shadow-sm overflow-hidden"
+                  className="bg-white border-2 border-slate-200 rounded-lg flex flex-col items-center justify-center px-1 text-center shadow-sm overflow-hidden"
                 >
                   {info?.docente ? (
                     <>
-                      <span className="text-indigo-950 font-black tracking-wide text-xl md:text-2xl uppercase leading-none truncate w-full">
+                      <span className="text-indigo-950 font-black tracking-wide text-base md:text-lg uppercase leading-tight truncate w-full">
                         {info.docente}
                       </span>
                       {info.nota && (
-                        <span className="text-indigo-600 font-bold text-xs md:text-sm tracking-normal leading-none truncate w-full mt-1">
+                        <span className="text-indigo-600 font-bold text-[11px] tracking-normal leading-tight truncate w-full mt-0.5">
                           {info.nota}
                         </span>
                       )}
                     </>
                   ) : (
-                    <span className="text-slate-300 text-base font-normal">—</span>
+                    <span className="text-slate-300 text-sm font-normal">—</span>
                   )}
                 </div>
               );
