@@ -237,7 +237,8 @@ export default function PannelloAdmin() {
                   <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Musica di Sottofondo</h2>
                   <button type="button" onClick={() => setImpostazioni({...impostazioni, attiva_musica: !impostazioni.attiva_musica})} className={`px-4 py-1.5 rounded-lg text-xs font-bold ${impostazioni.attiva_musica ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'}`}>{impostazioni.attiva_musica ? 'ON' : 'OFF'}</button>
                 </div>
-                <input type="text" placeholder="Link file Audio (.mp3)" value={impostazioni.musica_url} onChange={e => setImpostazioni({...impostazioni, musica_url: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 outline-none focus:border-emerald-500"/>
+                {/* CAMPO AGGIORNATO PER IL SUPPORTO A YOUTUBE */}
+                <input type="text" placeholder="Link YouTube o file .mp3" value={impostazioni.musica_url} onChange={e => setImpostazioni({...impostazioni, musica_url: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 outline-none focus:border-emerald-500"/>
               </div>
 
               <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
@@ -245,7 +246,8 @@ export default function PannelloAdmin() {
                   <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Alternanza Video Promo</h2>
                   <button type="button" onClick={() => setImpostazioni({...impostazioni, attiva_rotazione: !impostazioni.attiva_rotazione})} className={`px-4 py-1.5 rounded-lg text-xs font-bold ${impostazioni.attiva_rotazione ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'bg-slate-100 text-slate-500'}`}>{impostazioni.attiva_rotazione ? 'ON' : 'OFF'}</button>
                 </div>
-                <input type="text" placeholder="Link file Video (.mp4)" value={impostazioni.video_url} onChange={e => setImpostazioni({...impostazioni, video_url: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 outline-none focus:border-sky-500"/>
+                {/* CAMPO AGGIORNATO PER IL SUPPORTO A YOUTUBE */}
+                <input type="text" placeholder="Link YouTube (es. Live) o file .mp4" value={impostazioni.video_url} onChange={e => setImpostazioni({...impostazioni, video_url: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 outline-none focus:border-sky-500"/>
                 
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div>

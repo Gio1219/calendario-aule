@@ -17,6 +17,14 @@ const aule = [
   { id: 11, nome: 'Aula 11', artista: 'Beatles', tag: 'bg-pink-400' },
 ];
 
+// Funzioni di supporto per riconoscere ed estrarre l'ID di YouTube
+const isYouTube = (url: string) => url?.includes('youtube.com') || url?.includes('youtu.be');
+const getYouTubeId = (url: string) => {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=))([^"&?\/\s]{11})/);
+  return match ? match[1] : null;
+};
+
 export default function TabelloneTV() {
   const [assegnazioni, setAssegnazioni] = useState<Record<string, any>>({});
   const [impostazioni, setImpostazioni] = useState<any>({});
@@ -64,28 +72,55 @@ export default function TabelloneTV() {
   }, [vistaCorrente, impostazioni]);
 
   const avviaAudio = () => {
-    if (audioRef.current && impostazioni.attiva_musica) {
-      audioRef.current.play().catch(e => console.log("Autoplay bloccato", e));
+    if (!audioIniziato) {
       setAudioIniziato(true);
+      if (audioRef.current && impostazioni.attiva_musica && !isYouTube(impostazioni.musica_url)) {
+        audioRef.current.play().catch(e => console.log("Autoplay bloccato", e));
+      }
     }
   };
 
   return (
-    <main onClick={avviaAudio} className="h-screen w-screen bg-slate-900 overflow-hidden font-sans select-none relative">
-      {impostazioni.attiva_musica && impostazioni.musica_url && <audio ref={audioRef} src={impostazioni.musica_url} loop autoPlay hidden />}
+    <main onClick={avviaAudio} className="h-screen w-screen bg-slate-900 overflow-hidden font-sans select-none relative cursor-default">
       
+      {/* 1. PLAYER AUDIO NATIVO (Se si usa un file .mp3) */}
+      {impostazioni.attiva_musica && impostazioni.musica_url && !isYouTube(impostazioni.musica_url) && (
+        <audio ref={audioRef} src={impostazioni.musica_url} loop autoPlay hidden />
+      )}
+
+      {/* 2. PLAYER AUDIO YOUTUBE INVISIBILE (Se si usa un link YT come sottofondo musicale) */}
+      {audioIniziato && impostazioni.attiva_musica && impostazioni.musica_url && isYouTube(impostazioni.musica_url) && (
+        <iframe 
+          width="0" height="0" className="hidden"
+          src={`https://www.youtube.com/embed/${getYouTubeId(impostazioni.musica_url)}?autoplay=1&controls=0&loop=1&playlist=${getYouTubeId(impostazioni.musica_url)}`} 
+          allow="autoplay" 
+        />
+      )}
+      
+      {/* Overlay sblocco interazione per Autoplay */}
       {!audioIniziato && impostazioni.attiva_musica && (
         <div className="absolute z-50 bottom-4 right-4 bg-black/80 text-white px-4 py-2 rounded-xl text-xs font-bold animate-bounce cursor-pointer shadow-xl">
           👆 Tocca lo schermo per attivare la musica
         </div>
       )}
 
-      {/* VIDEO */}
-      <div className={`absolute inset-0 transition-opacity duration-1000 z-10 ${vistaCorrente === 'video' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-         {impostazioni.video_url && <video src={impostazioni.video_url} autoPlay loop muted className="w-full h-full object-cover" />}
+      {/* VISTA 1: VIDEO YOUTUBE o NATIVO */}
+      <div className={`absolute inset-0 transition-opacity duration-1000 z-10 ${vistaCorrente === 'video' ? 'opacity-100' : 'opacity-0 pointer-events-none bg-black'}`}>
+        {impostazioni.video_url && (
+          isYouTube(impostazioni.video_url) ? (
+            <iframe 
+              className="w-full h-full object-cover pointer-events-none"
+              src={`https://www.youtube.com/embed/${getYouTubeId(impostazioni.video_url)}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${getYouTubeId(impostazioni.video_url)}`}
+              allow="autoplay; encrypted-media"
+              frameBorder="0"
+            />
+          ) : (
+            <video src={impostazioni.video_url} autoPlay loop muted className="w-full h-full object-cover" />
+          )
+        )}
       </div>
 
-      {/* TABELLONE */}
+      {/* VISTA 2: TABELLONE ORARI */}
       <div className={`absolute inset-0 bg-slate-200 p-2 md:p-3.5 flex flex-col transition-opacity duration-1000 z-20 ${vistaCorrente === 'tabellone' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="w-full h-full bg-slate-100 border border-slate-300/80 rounded-2xl p-1.5 shadow-xl grid grid-cols-6 grid-rows-12 gap-1 overflow-hidden">
           
@@ -122,12 +157,10 @@ export default function TabelloneTV() {
                       haDoppio ? (
                         <div className="flex flex-col h-full w-full justify-between gap-0.5">
                           <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg flex flex-col items-center justify-center px-1 overflow-hidden">
-                            {/* DOPPIO INSEGNANTE 1 PIU' GRANDE */}
                             <span className="text-slate-900 font-black text-base md:text-lg lg:text-xl uppercase tracking-tight truncate w-full text-center leading-none mt-0.5">{info.docente || '—'}</span>
                             {info.nota && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5 leading-none">{info.nota}</span>}
                           </div>
                           <div className="flex-1 bg-indigo-50/70 border border-indigo-200 rounded-lg flex flex-col items-center justify-center px-1 overflow-hidden">
-                            {/* DOPPIO INSEGNANTE 2 PIU' GRANDE */}
                             <span className="text-indigo-950 font-black text-base md:text-lg lg:text-xl uppercase tracking-tight truncate w-full text-center leading-none mt-0.5">{info.docente_2}</span>
                             {info.nota_2 && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5 leading-none">{info.nota_2}</span>}
                           </div>
