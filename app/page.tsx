@@ -17,7 +17,6 @@ const aule = [
   { id: 11, nome: 'Aula 11', artista: 'Beatles', tag: 'bg-pink-400' },
 ];
 
-// Funzioni di supporto per riconoscere ed estrarre l'ID di YouTube
 const isYouTube = (url: string) => url?.includes('youtube.com') || url?.includes('youtu.be');
 const getYouTubeId = (url: string) => {
   if (!url) return null;
@@ -83,34 +82,34 @@ export default function TabelloneTV() {
   return (
     <main onClick={avviaAudio} className="h-screen w-screen bg-slate-900 overflow-hidden font-sans select-none relative cursor-default">
       
-      {/* 1. PLAYER AUDIO NATIVO (Se si usa un file .mp3) */}
+      {/* 1. PLAYER AUDIO NATIVO */}
       {impostazioni.attiva_musica && impostazioni.musica_url && !isYouTube(impostazioni.musica_url) && (
         <audio ref={audioRef} src={impostazioni.musica_url} loop autoPlay hidden />
       )}
 
-      {/* 2. PLAYER AUDIO YOUTUBE INVISIBILE (Se si usa un link YT come sottofondo musicale) */}
+      {/* 2. PLAYER YOUTUBE INVISIBILE (1x1 pixel) PER LIVE AUDIO */}
       {audioIniziato && impostazioni.attiva_musica && impostazioni.musica_url && isYouTube(impostazioni.musica_url) && (
         <iframe 
-          width="0" height="0" className="hidden"
-          src={`https://www.youtube.com/embed/${getYouTubeId(impostazioni.musica_url)}?autoplay=1&controls=0&loop=1&playlist=${getYouTubeId(impostazioni.musica_url)}`} 
-          allow="autoplay" 
+          className="absolute w-px h-px opacity-0 pointer-events-none -z-10"
+          src={`https://www.youtube.com/embed/${getYouTubeId(impostazioni.musica_url)}?autoplay=1&controls=0&playsinline=1`} 
+          allow="autoplay; encrypted-media" 
         />
       )}
       
-      {/* Overlay sblocco interazione per Autoplay */}
+      {/* Overlay Tocca Schermo */}
       {!audioIniziato && impostazioni.attiva_musica && (
         <div className="absolute z-50 bottom-4 right-4 bg-black/80 text-white px-4 py-2 rounded-xl text-xs font-bold animate-bounce cursor-pointer shadow-xl">
           👆 Tocca lo schermo per attivare la musica
         </div>
       )}
 
-      {/* VISTA 1: VIDEO YOUTUBE o NATIVO */}
+      {/* VISTA 1: VIDEO YOUTUBE O NATIVO */}
       <div className={`absolute inset-0 transition-opacity duration-1000 z-10 ${vistaCorrente === 'video' ? 'opacity-100' : 'opacity-0 pointer-events-none bg-black'}`}>
         {impostazioni.video_url && (
           isYouTube(impostazioni.video_url) ? (
             <iframe 
               className="w-full h-full object-cover pointer-events-none"
-              src={`https://www.youtube.com/embed/${getYouTubeId(impostazioni.video_url)}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${getYouTubeId(impostazioni.video_url)}`}
+              src={`https://www.youtube.com/embed/${getYouTubeId(impostazioni.video_url)}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&playsinline=1`}
               allow="autoplay; encrypted-media"
               frameBorder="0"
             />
