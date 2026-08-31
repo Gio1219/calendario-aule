@@ -65,96 +65,64 @@ export default function TabelloneTV() {
   }, []);
 
   return (
-    // Sfondo esterno neutro brillante per assorbire l'overscan TV
     <main className="h-screen w-screen bg-slate-200 p-2 md:p-3.5 flex flex-col overflow-hidden font-sans select-none antialiased">
-      
-      {/* Contenitore Tabellone Bianco Luminoso */}
       <div className="w-full h-full bg-slate-100 border border-slate-300/80 rounded-2xl p-1.5 shadow-xl grid grid-cols-6 grid-rows-12 gap-1 overflow-hidden">
         
-        {/* Intestazione Titolo AULE */}
+        {/* Header Colonne */}
         <div className="bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-lg md:text-xl tracking-widest uppercase shadow-md border border-slate-800">
           AULE
         </div>
-
-        {/* Intestazione Giorni Infrasettimanali */}
         {giorni.map((giorno) => (
-          <div
-            key={giorno}
-            className="bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-lg md:text-xl uppercase tracking-wider shadow-md border border-indigo-500"
-          >
+          <div key={giorno} className="bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-lg md:text-xl uppercase tracking-wider shadow-md border border-indigo-500">
             {giorno}
           </div>
         ))}
 
-        {/* Righe Aule e Celle */}
+        {/* Righe Aule */}
         {aule.map((aula) => (
           <React.Fragment key={aula.id}>
             
-            {/* Badge Aula Fissa in tema Chiaro */}
-            <div className="bg-white border-2 border-slate-200 rounded-xl flex items-center px-2 py-0.5 space-x-2 shadow-sm overflow-hidden">
-              <div className={`w-3 h-8 rounded-lg shrink-0 ${aula.tag.split(' ')[0]} shadow-sm border border-black/10`} />
+            {/* BADGE AULA FISSA - NOME INGRANDITO */}
+            <div className="bg-white border-2 border-slate-200 rounded-xl flex items-center px-2 py-0.5 space-x-3 shadow-sm overflow-hidden">
+              <div className={`w-3.5 h-10 rounded-lg shrink-0 ${aula.tag.split(' ')[0]} shadow-sm border border-black/10`} />
               <div className="flex flex-col min-w-0 justify-center">
-                <span className="font-black text-sm md:text-base text-slate-900 uppercase tracking-tight leading-tight truncate">
+                {/* Nome aula molto più grande */}
+                <span className="font-black text-lg md:text-xl text-slate-900 uppercase tracking-tight leading-none truncate">
                   {aula.nome}
                 </span>
-                <span className="font-extrabold text-[10px] md:text-xs text-indigo-600 uppercase leading-none truncate mt-0.5">
+                {/* Artista invariato */}
+                <span className="font-extrabold text-[10px] md:text-xs text-indigo-600 uppercase leading-none truncate mt-1">
                   {aula.artista}
                 </span>
               </div>
             </div>
 
-            {/* 5 Celle dei giorni per la TV */}
+            {/* 5 Celle dei giorni */}
             {giorni.map((_, indexGiorno) => {
               const info = assegnazioni[`${aula.id}-${indexGiorno}`];
               const haDoppio = Boolean(info?.docente_2);
 
               return (
-                <div
-                  key={`${aula.id}-${indexGiorno}`}
-                  className="bg-white border-2 border-slate-200 rounded-xl flex flex-col overflow-hidden p-0.5 justify-center shadow-sm"
-                >
+                <div key={`${aula.id}-${indexGiorno}`} className="bg-white border-2 border-slate-200 rounded-xl flex flex-col overflow-hidden p-0.5 justify-center shadow-sm">
                   {info?.docente || info?.docente_2 ? (
                     haDoppio ? (
-                      /* Layout a 2 Insegnanti (Turno M/P) */
                       <div className="flex flex-col h-full w-full justify-between gap-0.5">
-                        {/* Turno 1 */}
                         <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg flex flex-col items-center justify-center px-1 leading-none overflow-hidden">
-                          <span className="text-slate-900 font-black text-xs md:text-sm uppercase tracking-wide truncate w-full text-center">
-                            {info.docente || '—'}
-                          </span>
-                          {info.nota && (
-                            <span className="text-indigo-600 font-extrabold text-[9px] truncate w-full text-center leading-none mt-0.5">
-                              {info.nota}
-                            </span>
-                          )}
+                          <span className="text-slate-900 font-black text-xs md:text-sm uppercase tracking-wide truncate w-full text-center">{info.docente || '—'}</span>
+                          {info.nota && <span className="text-indigo-600 font-extrabold text-[9px] truncate w-full text-center leading-none mt-0.5">{info.nota}</span>}
                         </div>
-                        {/* Turno 2 */}
                         <div className="flex-1 bg-indigo-50/70 border border-indigo-200 rounded-lg flex flex-col items-center justify-center px-1 leading-none overflow-hidden">
-                          <span className="text-indigo-950 font-black text-xs md:text-sm uppercase tracking-wide truncate w-full text-center">
-                            {info.docente_2}
-                          </span>
-                          {info.nota_2 && (
-                            <span className="text-indigo-600 font-extrabold text-[9px] truncate w-full text-center leading-none mt-0.5">
-                              {info.nota_2}
-                            </span>
-                          )}
+                          <span className="text-indigo-950 font-black text-xs md:text-sm uppercase tracking-wide truncate w-full text-center">{info.docente_2}</span>
+                          {info.nota_2 && <span className="text-indigo-600 font-extrabold text-[9px] truncate w-full text-center leading-none mt-0.5">{info.nota_2}</span>}
                         </div>
                       </div>
                     ) : (
-                      /* Layout a Insegnante Singolo */
                       <div className="h-full w-full bg-slate-50/60 rounded-lg flex flex-col items-center justify-center px-1 py-0.5 overflow-hidden">
-                        <span className="text-slate-950 font-black text-base md:text-lg uppercase tracking-wide truncate w-full text-center leading-tight">
-                          {info.docente}
-                        </span>
-                        {info.nota && (
-                          <span className="text-indigo-600 font-black text-[10px] md:text-xs truncate w-full text-center leading-none mt-0.5">
-                            {info.nota}
-                          </span>
-                        )}
+                        <span className="text-slate-950 font-black text-base md:text-lg uppercase tracking-wide truncate w-full text-center leading-tight">{info.docente}</span>
+                        {info.nota && <span className="text-indigo-600 font-black text-[10px] md:text-xs truncate w-full text-center leading-none mt-0.5">{info.nota}</span>}
                       </div>
                     )
                   ) : (
-                    /* Cella Vuota */
                     <div className="h-full w-full flex items-center justify-center">
                       <span className="text-slate-300 font-normal text-xs">—</span>
                     </div>
