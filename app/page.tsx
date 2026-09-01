@@ -2,7 +2,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from './lib/supabase';
 
-const giorniNomi = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 const aule = [
   { id: 1, nome: 'Aula 1', artista: 'P. Daniele', tag: 'bg-red-500' },
   { id: 2, nome: 'Aula 2', artista: 'C. Orff', tag: 'bg-sky-400' },
@@ -40,7 +39,11 @@ export default function TabelloneTVGiornaliero() {
   const dataOggi = new Date();
   const indiceGiornoJS = dataOggi.getDay();
   const giornoIndexDB = indiceGiornoJS === 0 ? 1 : indiceGiornoJS; 
-  const nomeGiornoCorrente = giorniNomi[indiceGiornoJS];
+  const nomeGiornoCorrente = dataOggi.toLocaleDateString('it-IT', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long'
+  });
 
   const playerRef = useRef<HTMLIFrameElement>(null);
 
@@ -202,7 +205,7 @@ export default function TabelloneTVGiornaliero() {
           
           <div className="bg-indigo-600 text-white rounded-xl py-2 px-5 mb-2 flex items-center justify-between shadow-md border border-indigo-500 shrink-0">
             <span className="font-black text-xl md:text-2xl uppercase tracking-wider">
-              📅 {nomeGiornoCorrente}
+              {nomeGiornoCorrente}
             </span>
             
             <div className="flex items-center gap-2.5">
