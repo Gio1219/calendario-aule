@@ -40,6 +40,14 @@ export default function TabelloneTV() {
   
   const playerRef = useRef<HTMLIFrameElement>(null);
 
+  // Memorizza l'avvio per evitare che scompaia al refresh
+  useEffect(() => {
+    const giaAvviato = localStorage.getItem('tv_avviata');
+    if (giaAvviato === 'true') {
+      setAvviato(true);
+    }
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     
@@ -59,7 +67,7 @@ export default function TabelloneTV() {
         }
         if (resMedia.data) {
           setImpostazioni(resMedia.data);
-          if (resMedia.data.stato_riproduzione === 'play') {
+          if (resMedia.data.stato_riproduzione === 'play' && localStorage.getItem('tv_avviata') === 'true') {
             setAvviato(true);
           }
         }
@@ -75,7 +83,7 @@ export default function TabelloneTV() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'impostazioni_tv' }, (payload: any) => {
         if (payload.new) {
           setImpostazioni(payload.new);
-          if (payload.new.stato_riproduzione === 'play') {
+          if (payload.new.stato_riproduzione === 'play' && localStorage.getItem('tv_avviata') === 'true') {
             setAvviato(true);
             comandaPlayer('playVideo');
           } else if (payload.new.stato_riproduzione === 'pause') {
@@ -116,6 +124,7 @@ export default function TabelloneTV() {
 
   const handleAvviaTV = () => {
     setAvviato(true);
+    localStorage.setItem('tv_avviata', 'true');
     comandaPlayer('playVideo');
   };
 
@@ -136,7 +145,7 @@ export default function TabelloneTV() {
         </div>
       )}
 
-      {/* SCHERMATA DI AVVIO OBBLIGATORIO (Sblocco telecomando Fire TV) */}
+      {/* SCHERMATA DI AVVIO OBBLIGATORIO (Scompare e si ricorda dello stato) */}
       {!avviato && (
         <div className="absolute inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
           <div className="bg-indigo-600 border border-indigo-400 p-10 rounded-3xl shadow-2xl max-w-lg flex flex-col items-center space-y-6">
