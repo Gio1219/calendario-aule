@@ -125,7 +125,11 @@ export default function PannelloAdmin() {
       docente_2: abilitaDocente2 ? docente2.trim().toUpperCase() : null, nota_2: abilitaDocente2 ? nota2.trim() : null,
     }, { onConflict: 'aula_id,giorno_settimana' });
     setCaricamento(false);
-    if (!error) setMessaggio(`✅ Salvato Aula ${aula} (${giorni[giorno-1].label})`);
+    if (error) {
+      setMessaggio(`❌ Errore salvataggio: ${error.message}`);
+    } else {
+      setMessaggio(`✅ Salvato Aula ${aula} (${giorni[giorno-1].label})`);
+    }
   };
 
   const handleCancellaLezione = async () => {
@@ -157,10 +161,9 @@ export default function PannelloAdmin() {
       return;
     }
     setCaricamento(true); setMessaggio(null);
-    // Salviamo il sabato usando giorno_settimana = 6 (o salvando la data specifica se preferisci)
     const { error } = await supabase.from('assegnazioni_aule').upsert({ 
       aula_id: aulaSabato, 
-      giorno_settimana: 6, // Usiamo 6 per il sabato
+      giorno_settimana: 6, 
       docente: docenteSabato.trim().toUpperCase(), 
       nota: `Sabato ${dataSabato} - ${notaSabato.trim()}`,
     }, { onConflict: 'aula_id,giorno_settimana' });
@@ -321,7 +324,7 @@ export default function PannelloAdmin() {
               </div>
 
               <button type="submit" disabled={caricamento} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]">
-                AGGIUNGI SABATO STRAORDINARIO 🗓️
+                AGGIUNGI SABATO STRAORDINARIO
               </button>
             </form>
           )}
