@@ -149,48 +149,47 @@ export default function TabelloneTVGiornaliero() {
       </div>
 
       {/* VISTA 2: TABELLONE GIORNALIERO */}
-      <div className={`absolute inset-0 bg-slate-200 p-3 md:p-5 flex flex-col transition-opacity duration-1000 z-20 ${vistaCorrente === 'tabellone' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute inset-0 bg-slate-200 p-2 md:p-3 flex flex-col transition-opacity duration-1000 z-20 ${vistaCorrente === 'tabellone' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         
-        <div className="w-full h-full bg-slate-100 border border-slate-300/80 rounded-3xl p-3 shadow-2xl flex flex-col overflow-hidden">
+        <div className="w-full h-full bg-slate-100 border border-slate-300/80 rounded-2xl p-2 shadow-2xl flex flex-col overflow-hidden">
           
-          {/* INTESTAZIONE CON TASTO AUDIO INTEGRATO */}
-          <div className="bg-indigo-600 text-white rounded-2xl py-3 px-6 mb-3 flex items-center justify-between shadow-md border border-indigo-500">
-            <span className="font-black text-2xl md:text-3xl uppercase tracking-wider">
+          {/* INTESTAZIONE COMPATTA */}
+          <div className="bg-indigo-600 text-white rounded-xl py-2 px-5 mb-2 flex items-center justify-between shadow-md border border-indigo-500 shrink-0">
+            <span className="font-black text-xl md:text-2xl uppercase tracking-wider">
               📅 {nomeGiornoCorrente}
             </span>
             
-            {/* CONTENITORE DESTRA: Tasto sblocca audio + Nome Accademia */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <button 
                 onClick={attivaAudioManuale}
-                className="bg-indigo-500/50 hover:bg-indigo-400 text-white text-xs font-bold px-4 py-1.5 rounded-xl border border-indigo-400 shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
-                title="Premi per sbloccare l'audio se mutato dal browser"
+                className="bg-indigo-500/50 hover:bg-indigo-400 text-white text-xs font-bold px-3.5 py-1 rounded-lg border border-indigo-400 shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                title="Premi per sbloccare l'audio"
               >
                 <span>🎵</span> Sblocca audio
               </button>
 
-              <span className="text-xs md:text-sm font-bold bg-indigo-700 px-4 py-1.5 rounded-xl uppercase tracking-widest">
+              <span className="text-xs font-bold bg-indigo-700 px-3.5 py-1 rounded-lg uppercase tracking-widest">
                 Nuova Accademia Toscanini
               </span>
             </div>
           </div>
 
-          {/* LISTA DELLE AULE PER IL GIORNO CORRENTE */}
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 overflow-hidden">
+          {/* GRIGLIA AULE PERFETTAMENTE SCALATA SULL'ALTEZZA DELLO SCHERMO */}
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 overflow-hidden items-stretch">
             {aule.map((aula) => {
               const info = assegnazioni[`${aula.id}-${giornoIndexDB}`];
               const haDoppio = Boolean(info?.docente_2);
 
               return (
-                <div key={aula.id} className="bg-white border-2 border-slate-200 rounded-2xl p-3.5 flex items-center space-x-4 shadow-sm overflow-hidden">
-                  <div className={`w-4 h-full min-h-15 rounded-xl shrink-0 ${aula.tag} shadow-sm`} />
+                <div key={aula.id} className="bg-white border-2 border-slate-200 rounded-xl p-2.5 flex items-center space-x-3 shadow-sm overflow-hidden">
+                  <div className={`w-3.5 h-full rounded-lg shrink-0 ${aula.tag} shadow-sm`} />
                   
                   <div className="flex flex-col min-w-0 justify-center flex-1">
-                    <div className="flex items-baseline justify-between mb-1.5">
-                      <span className="font-black text-2xl md:text-3xl text-slate-900 uppercase tracking-tight truncate">
+                    <div className="flex items-baseline justify-between mb-1">
+                      <span className="font-black text-xl md:text-2xl text-slate-900 uppercase tracking-tight truncate">
                         {aula.nome}
                       </span>
-                      <span className="font-black text-xs md:text-sm text-indigo-600 uppercase tracking-wide truncate ml-2 bg-indigo-50 px-2.5 py-0.5 rounded-lg border border-indigo-100">
+                      <span className="font-black text-[11px] text-indigo-600 uppercase tracking-wide truncate ml-2 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
                         {aula.artista}
                       </span>
                     </div>
@@ -198,25 +197,25 @@ export default function TabelloneTVGiornaliero() {
                     <div>
                       {info?.docente || info?.docente_2 ? (
                         haDoppio ? (
-                          <div className="flex flex-col gap-1.5">
-                            <div className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-1.5 flex items-center justify-between">
-                              <span className="text-slate-950 font-black text-lg md:text-xl uppercase tracking-tight truncate">{info.docente || '—'}</span>
-                              {info.nota && <span className="text-indigo-600 font-bold text-xs truncate ml-2">{info.nota}</span>}
+                          <div className="flex flex-col gap-1">
+                            <div className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 flex items-center justify-between">
+                              <span className="text-slate-950 font-black text-base md:text-lg uppercase tracking-tight truncate">{info.docente || '—'}</span>
+                              {info.nota && <span className="text-indigo-600 font-bold text-[11px] truncate ml-2">{info.nota}</span>}
                             </div>
-                            <div className="bg-indigo-50/80 border border-indigo-200 rounded-xl px-3.5 py-1.5 flex items-center justify-between">
-                              <span className="text-indigo-950 font-black text-lg md:text-xl uppercase tracking-tight truncate">{info.docente_2}</span>
-                              {info.nota_2 && <span className="text-indigo-600 font-bold text-xs truncate ml-2">{info.nota_2}</span>}
+                            <div className="bg-indigo-50/80 border border-indigo-200 rounded-lg px-2.5 py-1 flex items-center justify-between">
+                              <span className="text-indigo-950 font-black text-base md:text-lg uppercase tracking-tight truncate">{info.docente_2}</span>
+                              {info.nota_2 && <span className="text-indigo-600 font-bold text-[11px] truncate ml-2">{info.nota_2}</span>}
                             </div>
                           </div>
                         ) : (
-                          <div className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 flex items-center justify-between">
-                            <span className="text-slate-950 font-black text-xl md:text-2xl uppercase tracking-wide truncate">{info.docente}</span>
+                          <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 flex items-center justify-between">
+                            <span className="text-slate-950 font-black text-lg md:text-xl uppercase tracking-wide truncate">{info.docente}</span>
                             {info.nota && <span className="text-indigo-600 font-bold text-xs truncate ml-2">{info.nota}</span>}
                           </div>
                         )
                       ) : (
-                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 flex items-center justify-center">
-                          <span className="text-emerald-700 font-black text-xs md:text-sm uppercase tracking-wider">
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center justify-center">
+                          <span className="text-emerald-700 font-black text-xs uppercase tracking-wider">
                             🟢 AULA ATTUALMENTE LIBERA
                           </span>
                         </div>
