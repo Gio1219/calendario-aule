@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from './lib/supabase';
 
-const giorni = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
+const giorniNomi = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 const aule = [
   { id: 1, nome: 'Aula 1', artista: 'P. Daniele', tag: 'bg-amber-400' },
   { id: 2, nome: 'Aula 2', artista: 'C. Orff', tag: 'bg-sky-400' },
@@ -32,11 +32,16 @@ const getYouTubeEmbedUrl = (url: string, isLive: boolean = false) => {
   return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}`;
 };
 
-export default function TabelloneTV() {
+export default function TabelloneTVGiornaliero() {
   const [assegnazioni, setAssegnazioni] = useState<Record<string, any>>({});
   const [impostazioni, setImpostazioni] = useState<any>({});
   const [vistaCorrente, setVistaCorrente] = useState<'tabellone' | 'video'>('tabellone');
   
+  const dataOggi = new Date();
+  const indiceGiornoJS = dataOggi.getDay();
+  const giornoIndexDB = indiceGiornoJS === 0 ? 1 : indiceGiornoJS; 
+  const nomeGiornoCorrente = giorniNomi[indiceGiornoJS];
+
   const playerRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -53,7 +58,9 @@ export default function TabelloneTV() {
         
         if (resOrari.data) {
           const mappa: any = {};
-          resOrari.data.forEach((item: any) => { mappa[`${item.aula_id}-${item.giorno_settimana - 1}`] = item; });
+          resOrari.data.forEach((item: any) => { 
+            mappa[`${item.aula_id}-${item.giorno_settimana}`] = item; 
+          });
           setAssegnazioni(mappa);
         }
         if (resMedia.data) {
@@ -120,7 +127,7 @@ export default function TabelloneTV() {
       
       {/* 🎵 LETTORE AUDIO INVISIBILE IN BACKGROUND */}
       {impostazioni.attiva_musica && videoIdMusica && impostazioni.stato_riproduzione === 'play' && (
-        <div className="absolute top-[-9999px] left-[-9999px] w-px h-[h-pxacity-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-9999px] left-[-9999px] w-px h-px opacity-0 pointer-events-none overflow-hidden">
           <iframe 
             ref={playerRef}
             src={`https://www.youtube.com/embed/${videoIdMusica}?autoplay=1&enablejsapi=1&controls=0`}
@@ -129,14 +136,6 @@ export default function TabelloneTV() {
           />
         </div>
       )}
-
-      {/* TASTO FLUTTUANTE IN ALTO A DESTRA (Lontano da tutte le aule) */}
-      <button 
-        onClick={attivaAudioManuale}
-        className="absolute top-2 right-4 z-50 bg-black/60 hover:bg-black/90 text-white/80 hover:text-white text-[11px] font-bold px-3 py-1 rounded-full backdrop-blur-md border border-white/15 shadow-lg transition-all cursor-pointer flex items-center gap-1"
-      >
-        <span>🎵</span> Sblocca audio
-      </button>
 
       {/* VISTA 1: VIDEO PROMOZIONALE */}
       <div className={`absolute inset-0 transition-opacity duration-1000 z-10 ${vistaCorrente === 'video' ? 'opacity-100' : 'opacity-0 pointer-events-none bg-black'}`}>
@@ -149,69 +148,89 @@ export default function TabelloneTV() {
         )}
       </div>
 
-      {/* VISTA 2: TABELLONE ORARI */}
-      <div className={`absolute inset-0 bg-slate-200 p-2 md:p-3.5 flex flex-col transition-opacity duration-1000 z-20 ${vistaCorrente === 'tabellone' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="w-full h-full bg-slate-100 border border-slate-300/80 rounded-2xl p-1.5 shadow-xl grid grid-cols-6 grid-rows-12 gap-1 overflow-hidden">
+      {/* VISTA 2: TABELLONE GIORNALIERO */}
+      <div className={`absolute inset-0 bg-slate-200 p-3 md:p-5 flex flex-col transition-opacity duration-1000 z-20 ${vistaCorrente === 'tabellone' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        
+        <div className="w-full h-full bg-slate-100 border border-slate-300/80 rounded-3xl p-3 shadow-2xl flex flex-col overflow-hidden">
           
-          <div className="bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-lg md:text-xl tracking-widest uppercase shadow-md">
-            AULE
-          </div>
-          {giorni.map((giorno) => (
-            <div key={giorno} className="bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-lg md:text-xl uppercase tracking-wider shadow-md border border-indigo-500">
-              {giorno}
+          {/* INTESTAZIONE CON TASTO AUDIO INTEGRATO */}
+          <div className="bg-indigo-600 text-white rounded-2xl py-3 px-6 mb-3 flex items-center justify-between shadow-md border border-indigo-500">
+            <span className="font-black text-2xl md:text-3xl uppercase tracking-wider">
+              📅 {nomeGiornoCorrente}
+            </span>
+            
+            {/* CONTENITORE DESTRA: Tasto sblocca audio + Nome Accademia */}
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={attivaAudioManuale}
+                className="bg-indigo-500/50 hover:bg-indigo-400 text-white text-xs font-bold px-4 py-1.5 rounded-xl border border-indigo-400 shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                title="Premi per sbloccare l'audio se mutato dal browser"
+              >
+                <span>🎵</span> Sblocca audio
+              </button>
+
+              <span className="text-xs md:text-sm font-bold bg-indigo-700 px-4 py-1.5 rounded-xl uppercase tracking-widest">
+                Nuova Accademia Toscanini
+              </span>
             </div>
-          ))}
+          </div>
 
-          {aule.map((aula) => (
-            <React.Fragment key={aula.id}>
-              <div className="bg-white border-2 border-slate-200 rounded-xl flex items-center px-2 py-0.5 space-x-3 shadow-sm overflow-hidden">
-                <div className={`w-3.5 h-12 rounded-lg shrink-0 ${aula.tag} shadow-sm`} />
-                <div className="flex flex-col min-w-0 justify-center">
-                  <span className="font-black text-2xl md:text-3xl text-slate-900 uppercase tracking-tight leading-none truncate mt-1">
-                    {aula.nome}
-                  </span>
-                  <span className="font-extrabold text-[10px] md:text-xs text-indigo-600 uppercase leading-none truncate mt-0.5 mb-1">
-                    {aula.artista}
-                  </span>
-                </div>
-              </div>
+          {/* LISTA DELLE AULE PER IL GIORNO CORRENTE */}
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 overflow-hidden">
+            {aule.map((aula) => {
+              const info = assegnazioni[`${aula.id}-${giornoIndexDB}`];
+              const haDoppio = Boolean(info?.docente_2);
 
-              {giorni.map((_, indexGiorno) => {
-                const info = assegnazioni[`${aula.id}-${indexGiorno}`];
-                const haDoppio = Boolean(info?.docente_2);
+              return (
+                <div key={aula.id} className="bg-white border-2 border-slate-200 rounded-2xl p-3.5 flex items-center space-x-4 shadow-sm overflow-hidden">
+                  <div className={`w-4 h-full min-h-15 rounded-xl shrink-0 ${aula.tag} shadow-sm`} />
+                  
+                  <div className="flex flex-col min-w-0 justify-center flex-1">
+                    <div className="flex items-baseline justify-between mb-1.5">
+                      <span className="font-black text-2xl md:text-3xl text-slate-900 uppercase tracking-tight truncate">
+                        {aula.nome}
+                      </span>
+                      <span className="font-black text-xs md:text-sm text-indigo-600 uppercase tracking-wide truncate ml-2 bg-indigo-50 px-2.5 py-0.5 rounded-lg border border-indigo-100">
+                        {aula.artista}
+                      </span>
+                    </div>
 
-                return (
-                  <div key={`${aula.id}-${indexGiorno}`} className="bg-white border-2 border-slate-200 rounded-xl flex flex-col overflow-hidden p-0.5 justify-center shadow-sm">
-                    {info?.docente || info?.docente_2 ? (
-                      haDoppio ? (
-                        <div className="flex flex-col h-full w-full justify-between gap-0.5">
-                          <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg flex flex-col items-center justify-center px-1 overflow-hidden">
-                            <span className="text-slate-900 font-black text-base md:text-lg lg:text-xl uppercase tracking-tight truncate w-full text-center leading-none mt-0.5">{info.docente || '—'}</span>
-                            {info.nota && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5 leading-none">{info.nota}</span>}
+                    <div>
+                      {info?.docente || info?.docente_2 ? (
+                        haDoppio ? (
+                          <div className="flex flex-col gap-1.5">
+                            <div className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-1.5 flex items-center justify-between">
+                              <span className="text-slate-950 font-black text-lg md:text-xl uppercase tracking-tight truncate">{info.docente || '—'}</span>
+                              {info.nota && <span className="text-indigo-600 font-bold text-xs truncate ml-2">{info.nota}</span>}
+                            </div>
+                            <div className="bg-indigo-50/80 border border-indigo-200 rounded-xl px-3.5 py-1.5 flex items-center justify-between">
+                              <span className="text-indigo-950 font-black text-lg md:text-xl uppercase tracking-tight truncate">{info.docente_2}</span>
+                              {info.nota_2 && <span className="text-indigo-600 font-bold text-xs truncate ml-2">{info.nota_2}</span>}
+                            </div>
                           </div>
-                          <div className="flex-1 bg-indigo-50/70 border border-indigo-200 rounded-lg flex flex-col items-center justify-center px-1 overflow-hidden">
-                            <span className="text-indigo-950 font-black text-base md:text-lg lg:text-xl uppercase tracking-tight truncate w-full text-center leading-none mt-0.5">{info.docente_2}</span>
-                            {info.nota_2 && <span className="text-indigo-600 font-extrabold text-[9px] md:text-[10px] truncate w-full text-center mt-0.5 leading-none">{info.nota_2}</span>}
+                        ) : (
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 flex items-center justify-between">
+                            <span className="text-slate-950 font-black text-xl md:text-2xl uppercase tracking-wide truncate">{info.docente}</span>
+                            {info.nota && <span className="text-indigo-600 font-bold text-xs truncate ml-2">{info.nota}</span>}
                           </div>
-                        </div>
+                        )
                       ) : (
-                        <div className="h-full w-full bg-slate-50/60 rounded-lg flex flex-col items-center justify-center px-1 py-0.5 overflow-hidden">
-                          <span className="text-slate-950 font-black text-xl md:text-2xl lg:text-3xl uppercase tracking-wide truncate w-full text-center">{info.docente}</span>
-                          {info.nota && <span className="text-indigo-600 font-black text-[10px] md:text-xs truncate w-full text-center mt-0.5">{info.nota}</span>}
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 flex items-center justify-center">
+                          <span className="text-emerald-700 font-black text-xs md:text-sm uppercase tracking-wider">
+                            🟢 AULA ATTUALMENTE LIBERA
+                          </span>
                         </div>
-                      )
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center">
-                        <span className="text-slate-300 font-normal text-xs md:text-sm">—</span>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                );
-              })}
-            </React.Fragment>
-          ))}
+                </div>
+              );
+            })}
+          </div>
+
         </div>
       </div>
+
     </main>
   );
 }
