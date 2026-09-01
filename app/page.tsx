@@ -174,8 +174,8 @@ export default function TabelloneTVGiornaliero() {
             </div>
           </div>
 
-          {/* GRIGLIA AULE PERFETTAMENTE SCALATA SULL'ALTEZZA DELLO SCHERMO */}
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 overflow-hidden items-stretch">
+          {/* GRIGLIA AULE ORDINATA A COLONNE (Scende in verticale e poi compila la seconda colonna) */}
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 grid-flow-row md:grid-flow-col gap-2 overflow-hidden items-stretch">
             {aule.map((aula) => {
               const info = assegnazioni[`${aula.id}-${giornoIndexDB}`];
               const haDoppio = Boolean(info?.docente_2);
