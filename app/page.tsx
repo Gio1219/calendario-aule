@@ -59,7 +59,6 @@ export default function TabelloneTV() {
         }
         if (resMedia.data) {
           setImpostazioni(resMedia.data);
-          // Se dal DB lo stato di riproduzione è attivo, avvia in automatico
           if (resMedia.data.stato_riproduzione === 'play') {
             setAvviato(true);
           }
@@ -115,7 +114,7 @@ export default function TabelloneTV() {
     return () => clearTimeout(timer);
   }, [vistaCorrente, impostazioni]);
 
-  const avviaAudioInBackground = () => {
+  const handleAvviaTV = () => {
     setAvviato(true);
     comandaPlayer('playVideo');
   };
@@ -125,7 +124,7 @@ export default function TabelloneTV() {
   return (
     <main className="h-screen w-screen bg-slate-900 overflow-hidden font-sans select-none relative">
       
-     {/* 🎵 LETTORE AUDIO INVISIBILE IN BACKGROUND (Sincronizzato in tempo reale) */}
+      {/* 🎵 LETTORE AUDIO INVISIBILE IN BACKGROUND */}
       {impostazioni.attiva_musica && videoIdMusica && avviato && impostazioni.stato_riproduzione === 'play' && (
         <div className="absolute top-[-9999px] left-[-9999px] w-px h-px opacity-0 pointer-events-none overflow-hidden">
           <iframe 
@@ -137,16 +136,19 @@ export default function TabelloneTV() {
         </div>
       )}
 
-      {/* TASTO DI EMERGENZA PER IL PRIMO ACCESSO (Se il browser blocca l'autoplay nativo) */}
-      {!avviato && impostazioni.attiva_musica && (
-        <div onClick={avviaAudioInBackground} className="absolute inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-6 text-center cursor-pointer">
-          <div className="bg-indigo-600 border border-indigo-400 p-8 rounded-3xl shadow-2xl max-w-md flex flex-col items-center space-y-4">
-            <span className="text-4xl">🎵</span>
-            <h2 className="text-2xl font-black text-white">Avvia il Display TV</h2>
-            <p className="text-sm text-indigo-100 font-medium">
-              Ticca lo schermo per avviare la live e il tabellone a schermo intero.
+      {/* SCHERMATA DI AVVIO OBBLIGATORIO (Sblocco telecomando Fire TV) */}
+      {!avviato && (
+        <div className="absolute inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+          <div className="bg-indigo-600 border border-indigo-400 p-10 rounded-3xl shadow-2xl max-w-lg flex flex-col items-center space-y-6">
+            <span className="text-5xl">🚀</span>
+            <h2 className="text-3xl font-black text-white tracking-tight">Avvia il Display TV</h2>
+            <p className="text-sm text-indigo-100 font-medium leading-relaxed">
+              Premi il tasto centrale del telecomando per avviare il tabellone a schermo intero e attivare l'audio in background.
             </p>
-            <button className="w-full bg-white text-indigo-950 font-black py-4 px-6 rounded-2xl shadow-lg text-lg">
+            <button 
+              onClick={handleAvviaTV}
+              className="w-full bg-white hover:bg-slate-100 text-indigo-950 font-black py-5 px-8 rounded-2xl shadow-xl transition-all active:scale-95 text-xl cursor-pointer"
+            >
               AVVIA TV 🚀
             </button>
           </div>
