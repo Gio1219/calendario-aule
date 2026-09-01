@@ -36,17 +36,8 @@ export default function TabelloneTV() {
   const [assegnazioni, setAssegnazioni] = useState<Record<string, any>>({});
   const [impostazioni, setImpostazioni] = useState<any>({});
   const [vistaCorrente, setVistaCorrente] = useState<'tabellone' | 'video'>('tabellone');
-  const [avviato, setAvviato] = useState(false);
   
   const playerRef = useRef<HTMLIFrameElement>(null);
-
-  // Memorizza l'avvio per evitare che scompaia al refresh
-  useEffect(() => {
-    const giaAvviato = localStorage.getItem('tv_avviata');
-    if (giaAvviato === 'true') {
-      setAvviato(true);
-    }
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -67,9 +58,6 @@ export default function TabelloneTV() {
         }
         if (resMedia.data) {
           setImpostazioni(resMedia.data);
-          if (resMedia.data.stato_riproduzione === 'play' && localStorage.getItem('tv_avviata') === 'true') {
-            setAvviato(true);
-          }
         }
       } catch (err: any) {
         if (err?.name === 'AbortError') return;
@@ -83,8 +71,7 @@ export default function TabelloneTV() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'impostazioni_tv' }, (payload: any) => {
         if (payload.new) {
           setImpostazioni(payload.new);
-          if (payload.new.stato_riproduzione === 'play' && localStorage.getItem('tv_avviata') === 'true') {
-            setAvviato(true);
+          if (payload.new.stato_riproduzione === 'play') {
             comandaPlayer('playVideo');
           } else if (payload.new.stato_riproduzione === 'pause') {
             comandaPlayer('pauseVideo');
@@ -122,9 +109,7 @@ export default function TabelloneTV() {
     return () => clearTimeout(timer);
   }, [vistaCorrente, impostazioni]);
 
-  const handleAvviaTV = () => {
-    setAvviato(true);
-    localStorage.setItem('tv_avviata', 'true');
+  const attivaAudioManuale = () => {
     comandaPlayer('playVideo');
   };
 
@@ -134,8 +119,8 @@ export default function TabelloneTV() {
     <main className="h-screen w-screen bg-slate-900 overflow-hidden font-sans select-none relative">
       
       {/* 🎵 LETTORE AUDIO INVISIBILE IN BACKGROUND */}
-      {impostazioni.attiva_musica && videoIdMusica && avviato && impostazioni.stato_riproduzione === 'play' && (
-        <div className="absolute top-[-9999px] left-[-9999px] w-px h-px opacity-0 pointer-events-none overflow-hidden">
+      {impostazioni.attiva_musica && videoIdMusica && impostazioni.stato_riproduzione === 'play' && (
+        <div className="absolute top-[-9999px] left-[-9999px] w-px h-[h-pxacity-0 pointer-events-none overflow-hidden">
           <iframe 
             ref={playerRef}
             src={`https://www.youtube.com/embed/${videoIdMusica}?autoplay=1&enablejsapi=1&controls=0`}
@@ -145,24 +130,13 @@ export default function TabelloneTV() {
         </div>
       )}
 
-      {/* SCHERMATA DI AVVIO OBBLIGATORIO (Scompare e si ricorda dello stato) */}
-      {!avviato && (
-        <div className="absolute inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
-          <div className="bg-indigo-600 border border-indigo-400 p-10 rounded-3xl shadow-2xl max-w-lg flex flex-col items-center space-y-6">
-            <span className="text-5xl">🚀</span>
-            <h2 className="text-3xl font-black text-white tracking-tight">Avvia il Display TV</h2>
-            <p className="text-sm text-indigo-100 font-medium leading-relaxed">
-              Premi il tasto centrale del telecomando per avviare il tabellone a schermo intero e attivare l'audio in background.
-            </p>
-            <button 
-              onClick={handleAvviaTV}
-              className="w-full bg-white hover:bg-slate-100 text-indigo-950 font-black py-5 px-8 rounded-2xl shadow-xl transition-all active:scale-95 text-xl cursor-pointer"
-            >
-              AVVIA TV 🚀
-            </button>
-          </div>
-        </div>
-      )}
+      {/* TASTO FLUTTUANTE IN ALTO A DESTRA (Lontano da tutte le aule) */}
+      <button 
+        onClick={attivaAudioManuale}
+        className="absolute top-2 right-4 z-50 bg-black/60 hover:bg-black/90 text-white/80 hover:text-white text-[11px] font-bold px-3 py-1 rounded-full backdrop-blur-md border border-white/15 shadow-lg transition-all cursor-pointer flex items-center gap-1"
+      >
+        <span>🎵</span> Sblocca audio
+      </button>
 
       {/* VISTA 1: VIDEO PROMOZIONALE */}
       <div className={`absolute inset-0 transition-opacity duration-1000 z-10 ${vistaCorrente === 'video' ? 'opacity-100' : 'opacity-0 pointer-events-none bg-black'}`}>
