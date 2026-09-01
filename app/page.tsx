@@ -33,16 +33,8 @@ const getYouTubeEmbedUrl = (url: string, isLive: boolean = false) => {
 
 export default function TabelloneTVGiornaliero() {
   const [assegnazioni, setAssegnazioni] = useState<Record<string, any>>({});
-  const [fasceSpeciali, setFasceSpeciali] = useState<any[]>([]);
   const [impostazioni, setImpostazioni] = useState<any>({});
   const [vistaCorrente, setVistaCorrente] = useState<'tabellone' | 'video'>('tabellone');
-  const [oraCorrente, setOraCorrente] = useState(new Date());
-
-  // Aggiorna l'orologio ogni 30 secondi per verificare i cambi di fascia automatica
-  useEffect(() => {
-    const timer = setInterval(() => setOraCorrente(new Date()), 30000);
-    return () => clearInterval(timer);
-  }, []);
   
   const dataOggi = new Date();
   const indiceGiornoJS = dataOggi.getDay();
@@ -60,9 +52,8 @@ export default function TabelloneTVGiornaliero() {
     
     const fetchDati = async () => {
       try {
-        const [resOrari, resSpeciali, resMedia] = await Promise.all([
+        const [resOrari, resMedia] = await Promise.all([
           supabase.from('assegnazioni_aule').select('*'),
-          supabase.from('dettagli_orario_speciale').select('*'),
           supabase.from('impostazioni_tv').select('*').eq('id', 1).single()
         ]);
         
@@ -74,9 +65,6 @@ export default function TabelloneTVGiornaliero() {
             mappa[`${item.aula_id}-${item.giorno_settimana}`] = item; 
           });
           setAssegnazioni(mappa);
-        }
-        if (resSpeciali.data) {
-          setFasceSpeciali(resSpeciali.data);
         }
         if (resMedia.data) {
           setImpostazioni(resMedia.data);
@@ -90,7 +78,6 @@ export default function TabelloneTVGiornaliero() {
 
     const channel = supabase.channel('tv-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'assegnazioni_aule' }, () => fetchDati())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'dettagli_orario_speciale' }, () => fetchDati())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'impostazioni_tv' }, (payload: any) => {
         if (payload.new) {
           setImpostazioni(payload.new);
@@ -140,23 +127,7 @@ export default function TabelloneTVGiornaliero() {
 
   const renderCardAula = (aula: typeof aule[0]) => {
     const info = assegnazioni[`${aula.id}-${giornoIndexDB}`];
-    const oraAttualeStr = oraCorrente.toTimeString().slice(0, 5); // Es. "16:50"
-
-    let docenteDaMostrare = info?.docente;
-    let notaDaMostrare = info?.nota;
-
-    if (info?.usa_orario_speciale) {
-      const fasciaTrovata = fasceSpeciali.find((f) => {
-        return f.aula_id === aula.id && f.giorno_settimana === giornoIndexDB && oraAttualeStr >= f.ora_inizio && oraAttualeStr <= f.ora_fine;
-      });
-
-      if (fasciaTrovata) {
-        docenteDaMostrare = fasciaTrovata.docente;
-        notaDaMostrare = `${fasciaTrovata.ora_inizio} - ${fasciaTrovata.ora_fine} ${fasciaTrovata.nota ? `(${fasciaTrovata.nota})` : ''}`;
-      } else {
-        docenteDaMostrare = null; 
-      }
-    }
+    const haDoppio = Boolean(info?.docente_2);
 
     return (
       <div key={aula.id} className="bg-white border-2 border-slate-200 rounded-xl p-2 flex items-center space-x-3 shadow-sm overflow-hidden flex-1">
@@ -173,15 +144,24 @@ export default function TabelloneTVGiornaliero() {
           </div>
 
           <div>
-            {docenteDaMostrare ? (
-              <div className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 flex items-center justify-between">
-                <span className="text-slate-950 font-black text-base md:text-lg uppercase tracking-wide truncate">
-                  {docenteDaMostrare}
-                </span>
-                <span className="text-indigo-600 font-bold text-[11px] truncate ml-2">
-                  {notaDaMostrare}
-                </span>
-              </div>
+            {info?.docente || info?.docente_2 ? (
+              haDoppio ? (
+                <div className="flex flex-col gap-0.5">
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 flex items-center justify-between">
+                    <span className="text-slate-950 font-black text-sm md:text-base uppercase tracking-tight truncate">{info.docente || '—'}</span>
+                    {info.nota && <span className="text-indigo-600 font-bold text-[10px] truncate ml-2">{info.nota}</span>}
+                  </div>
+                  <div className="bg-indigo-50/80 border border-indigo-200 rounded-lg px-2 py-0.5 flex items-center justify-between">
+                    <span className="text-slate-950 font-black text-sm md:text-base uppercase tracking-tight truncate">{info.docente_2}</span>
+                    {info.nota_2 && <span className="text-indigo-600 font-bold text-[10px] truncate ml-2">{info.nota_2}</span>}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 flex items-center justify-between">
+                  <span className="text-slate-950 font-black text-base md:text-lg uppercase tracking-wide truncate">{info.docente}</span>
+                  {info.nota && <span className="text-indigo-600 font-bold text-[11px] truncate ml-2">{info.nota}</span>}
+                </div>
+              )
             ) : (
               <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1 flex items-center justify-center">
                 <span className="text-emerald-700 font-black text-[11px] uppercase tracking-wider">
