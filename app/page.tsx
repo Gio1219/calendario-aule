@@ -4,17 +4,17 @@ import { supabase } from './lib/supabase';
 
 const giorniNomi = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 const aule = [
-  { id: 1, nome: 'Aula 1', artista: 'P. Daniele', tag: 'bg-amber-400' },
+  { id: 1, nome: 'Aula 1', artista: 'P. Daniele', tag: 'bg-red-500' },
   { id: 2, nome: 'Aula 2', artista: 'C. Orff', tag: 'bg-sky-400' },
-  { id: 3, nome: 'Aula 3', artista: 'F. Chopin', tag: 'bg-teal-400' },
-  { id: 4, nome: 'Aula 4', artista: 'N. Paganini', tag: 'bg-cyan-400' },
-  { id: 5, nome: 'Aula 5', artista: 'D. Krall', tag: 'bg-emerald-400' },
-  { id: 6, nome: 'Aula 6', artista: 'R. Charles', tag: 'bg-green-400' },
-  { id: 7, nome: 'Aula 7', artista: 'A. Toscanini', tag: 'bg-fuchsia-400' },
-  { id: 8, nome: 'Aula 8', artista: 'J. Hendrix', tag: 'bg-orange-400' },
-  { id: 9, nome: 'Aula 9', artista: 'M. Davis', tag: 'bg-lime-400' },
-  { id: 10, nome: 'Aula 10', artista: 'J. Bonham', tag: 'bg-yellow-400' },
-  { id: 11, nome: 'Aula 11', artista: 'Beatles', tag: 'bg-pink-400' },
+  { id: 3, nome: 'Aula 3', artista: 'F. Chopin', tag: 'bg-amber-400' },
+  { id: 4, nome: 'Aula 4', artista: 'N. Paganini', tag: 'bg-violet-500' },
+  { id: 5, nome: 'Aula 5', artista: 'D. Krall', tag: 'bg-emerald-500' },
+  { id: 6, nome: 'Aula 6', artista: 'R. Charles', tag: 'bg-orange-500' },
+  { id: 7, nome: 'Aula 7', artista: 'A. Toscanini', tag: 'bg-indigo-500' },
+  { id: 8, nome: 'Aula 8', artista: 'J. Hendrix', tag: 'bg-lime-400' },
+  { id: 9, nome: 'Aula 9', artista: 'M. Davis', tag: 'bg-fuchsia-500' },
+  { id: 10, nome: 'Aula 10', artista: 'J. Bonham', tag: 'bg-teal-400' },
+  { id: 11, nome: 'Aula 11', artista: 'Beatles', tag: 'bg-rose-500' },
 ];
 
 const getYouTubeId = (url: string) => {
@@ -122,10 +122,59 @@ export default function TabelloneTVGiornaliero() {
 
   const videoIdMusica = getYouTubeId(impostazioni.musica_url);
 
+  const renderCardAula = (aula: typeof aule[0]) => {
+    const info = assegnazioni[`${aula.id}-${giornoIndexDB}`];
+    const haDoppio = Boolean(info?.docente_2);
+
+    return (
+      <div key={aula.id} className="bg-white border-2 border-slate-200 rounded-xl p-2 flex items-center space-x-3 shadow-sm overflow-hidden flex-1">
+        <div className={`w-3 h-full rounded-lg shrink-0 ${aula.tag} shadow-sm`} />
+        
+        <div className="flex flex-col min-w-0 justify-center flex-1">
+          <div className="flex items-baseline justify-between mb-0.5">
+            <span className="font-black text-lg md:text-xl text-slate-900 uppercase tracking-tight truncate">
+              {aula.nome}
+            </span>
+            <span className="font-black text-[10px] text-indigo-600 uppercase tracking-wide truncate ml-2 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+              {aula.artista}
+            </span>
+          </div>
+
+          <div>
+            {info?.docente || info?.docente_2 ? (
+              haDoppio ? (
+                <div className="flex flex-col gap-0.5">
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 flex items-center justify-between">
+                    <span className="text-slate-950 font-black text-sm md:text-base uppercase tracking-tight truncate">{info.docente || '—'}</span>
+                    {info.nota && <span className="text-indigo-600 font-bold text-[10px] truncate ml-2">{info.nota}</span>}
+                  </div>
+                  <div className="bg-indigo-50/80 border border-indigo-200 rounded-lg px-2 py-0.5 flex items-center justify-between">
+                    <span className="text-slate-950 font-black text-sm md:text-base uppercase tracking-tight truncate">{info.docente_2}</span>
+                    {info.nota_2 && <span className="text-indigo-600 font-bold text-[10px] truncate ml-2">{info.nota_2}</span>}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 flex items-center justify-between">
+                  <span className="text-slate-950 font-black text-base md:text-lg uppercase tracking-wide truncate">{info.docente}</span>
+                  {info.nota && <span className="text-indigo-600 font-bold text-[11px] truncate ml-2">{info.nota}</span>}
+                </div>
+              )
+            ) : (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1 flex items-center justify-center">
+                <span className="text-emerald-700 font-black text-[11px] uppercase tracking-wider">
+                  🟢 AULA ATTUALMENTE LIBERA
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <main className="h-screen w-screen bg-slate-900 overflow-hidden font-sans select-none relative">
       
-      {/* 🎵 LETTORE AUDIO INVISIBILE IN BACKGROUND */}
       {impostazioni.attiva_musica && videoIdMusica && impostazioni.stato_riproduzione === 'play' && (
         <div className="absolute top-[-9999px] left-[-9999px] w-px h-px opacity-0 pointer-events-none overflow-hidden">
           <iframe 
@@ -137,7 +186,6 @@ export default function TabelloneTVGiornaliero() {
         </div>
       )}
 
-      {/* VISTA 1: VIDEO PROMOZIONALE */}
       <div className={`absolute inset-0 transition-opacity duration-1000 z-10 ${vistaCorrente === 'video' ? 'opacity-100' : 'opacity-0 pointer-events-none bg-black'}`}>
         {impostazioni.video_url && (
           <iframe 
@@ -148,12 +196,10 @@ export default function TabelloneTVGiornaliero() {
         )}
       </div>
 
-      {/* VISTA 2: TABELLONE GIORNALIERO */}
       <div className={`absolute inset-0 bg-slate-200 p-2 md:p-3 flex flex-col transition-opacity duration-1000 z-20 ${vistaCorrente === 'tabellone' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         
         <div className="w-full h-full bg-slate-100 border border-slate-300/80 rounded-2xl p-2 shadow-2xl flex flex-col overflow-hidden">
           
-          {/* INTESTAZIONE COMPATTA */}
           <div className="bg-indigo-600 text-white rounded-xl py-2 px-5 mb-2 flex items-center justify-between shadow-md border border-indigo-500 shrink-0">
             <span className="font-black text-xl md:text-2xl uppercase tracking-wider">
               📅 {nomeGiornoCorrente}
@@ -174,57 +220,14 @@ export default function TabelloneTVGiornaliero() {
             </div>
           </div>
 
-          {/* GRIGLIA AULE ORDINATA A COLONNE (Scende in verticale e poi compila la seconda colonna) */}
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 grid-flow-row md:grid-flow-col gap-2 overflow-hidden items-stretch">
-            {aule.map((aula) => {
-              const info = assegnazioni[`${aula.id}-${giornoIndexDB}`];
-              const haDoppio = Boolean(info?.docente_2);
+          <div className="flex-1 grid grid-cols-2 gap-2 overflow-hidden items-stretch">
+            <div className="flex flex-col gap-1.5 h-full">
+              {aule.slice(0, 6).map((aula) => renderCardAula(aula))}
+            </div>
 
-              return (
-                <div key={aula.id} className="bg-white border-2 border-slate-200 rounded-xl p-2.5 flex items-center space-x-3 shadow-sm overflow-hidden">
-                  <div className={`w-3.5 h-full rounded-lg shrink-0 ${aula.tag} shadow-sm`} />
-                  
-                  <div className="flex flex-col min-w-0 justify-center flex-1">
-                    <div className="flex items-baseline justify-between mb-1">
-                      <span className="font-black text-xl md:text-2xl text-slate-900 uppercase tracking-tight truncate">
-                        {aula.nome}
-                      </span>
-                      <span className="font-black text-[11px] text-indigo-600 uppercase tracking-wide truncate ml-2 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
-                        {aula.artista}
-                      </span>
-                    </div>
-
-                    <div>
-                      {info?.docente || info?.docente_2 ? (
-                        haDoppio ? (
-                          <div className="flex flex-col gap-1">
-                            <div className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 flex items-center justify-between">
-                              <span className="text-slate-950 font-black text-base md:text-lg uppercase tracking-tight truncate">{info.docente || '—'}</span>
-                              {info.nota && <span className="text-indigo-600 font-bold text-[11px] truncate ml-2">{info.nota}</span>}
-                            </div>
-                            <div className="bg-indigo-50/80 border border-indigo-200 rounded-lg px-2.5 py-1 flex items-center justify-between">
-                              <span className="text-indigo-950 font-black text-base md:text-lg uppercase tracking-tight truncate">{info.docente_2}</span>
-                              {info.nota_2 && <span className="text-indigo-600 font-bold text-[11px] truncate ml-2">{info.nota_2}</span>}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 flex items-center justify-between">
-                            <span className="text-slate-950 font-black text-lg md:text-xl uppercase tracking-wide truncate">{info.docente}</span>
-                            {info.nota && <span className="text-indigo-600 font-bold text-xs truncate ml-2">{info.nota}</span>}
-                          </div>
-                        )
-                      ) : (
-                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center justify-center">
-                          <span className="text-emerald-700 font-black text-xs uppercase tracking-wider">
-                            🟢 AULA ATTUALMENTE LIBERA
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            <div className="flex flex-col gap-1.5 h-full">
+              {aule.slice(6, 11).map((aula) => renderCardAula(aula))}
+            </div>
           </div>
 
         </div>
