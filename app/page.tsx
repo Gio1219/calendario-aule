@@ -38,7 +38,7 @@ export default function TabelloneTVGiornaliero() {
   const [vistaCorrente, setVistaCorrente] = useState<'tabellone' | 'video'>('tabellone');
   const [oraCorrente, setOraCorrente] = useState(new Date());
 
-  // Aggiorna l'orologio ogni 30 secondi per gestire i cambi automatici di fascia
+  // Aggiorna l'orologio ogni 30 secondi per verificare i cambi di fascia automatica
   useEffect(() => {
     const timer = setInterval(() => setOraCorrente(new Date()), 30000);
     return () => clearInterval(timer);
@@ -142,7 +142,6 @@ export default function TabelloneTVGiornaliero() {
     const info = assegnazioni[`${aula.id}-${giornoIndexDB}`];
     const oraAttualeStr = oraCorrente.toTimeString().slice(0, 5); // Es. "16:50"
 
-    // Se il flag dell'orario speciale è attivo, cerchiamo la fascia oraria corrispondente all'ora attuale
     let docenteDaMostrare = info?.docente;
     let notaDaMostrare = info?.nota;
 
@@ -155,7 +154,7 @@ export default function TabelloneTVGiornaliero() {
         docenteDaMostrare = fasciaTrovata.docente;
         notaDaMostrare = `${fasciaTrovata.ora_inizio} - ${fasciaTrovata.ora_fine} ${fasciaTrovata.nota ? `(${fasciaTrovata.nota})` : ''}`;
       } else {
-        docenteDaMostrare = null; // Libera se in quel momento non c'è nessuna fascia attiva
+        docenteDaMostrare = null; 
       }
     }
 
