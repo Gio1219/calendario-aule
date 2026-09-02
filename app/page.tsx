@@ -165,7 +165,7 @@ export default function TabelloneTVGiornaliero() {
             ) : (
               <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1 flex items-center justify-center">
                 <span className="text-emerald-700 font-black text-[11px] uppercase tracking-wider">
-                  🟢 AULA ATTUALMENTE LIBERA
+                 AULA ATTUALMENTE LIBERA
                 </span>
               </div>
             )}
